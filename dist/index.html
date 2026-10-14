@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2f3f0"><meta name="description" content="Five translucent cassettes. One clear acrylic deck. A tactile 3D listening room for your music.">
+  <title>TAPE//CLUB — The listening room</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='10' width='60' height='44' rx='8' fill='%23282c31'/%3E%3Ccircle cx='20' cy='30' r='8' fill='%23c4c0fa'/%3E%3Ccircle cx='44' cy='30' r='8' fill='%23c4c0fa'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="./style.css">
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+  <script src="./vendor/gsap.min.js"></script>
+</head>
+<body>
+  <header class="masthead"><a class="wordmark" href="./" aria-label="TAPE CLUB home">TAPE<span>//</span>CLUB<sup>®</sup></a><div class="edition">THE LISTENING ROOM <span>VOL. 01 / FIVE TAPES</span></div><button id="help-button" class="text-button">How to listen <span>↗</span></button></header>
+  <main>
+    <section class="studio" aria-label="Cassette collection and player">
+      <div class="stage" id="stage">
+        <div class="stage-heading"><div class="eyebrow"><span class="live-dot"></span> A LITTLE LESS SKIP. A LITTLE MORE LISTEN.</div><h1>Good music.<br><em>Better rituals.</em></h1><p>Pick a tape. Make time for sound.</p></div>
+        <div id="canvas-container" aria-label="3D cassette rack and graphite player. Select a tape using the collection buttons below."></div>
+        <div class="loading" id="loading" role="status">Setting up the listening room<span></span></div>
+        <div class="stage-bottom"><span id="gesture-hint">DRAG TO ORBIT · SCROLL TO ZOOM</span><div class="view-controls"><button id="view-room" aria-label="Reset room view" class="active">Room</button><button id="view-deck">Deck</button><button id="inspect-button">Inspect tape ↗</button></div></div>
+        <div id="error-banner" role="alert" hidden></div>
+      </div>
+      <aside class="tape-panel">
+        <div class="panel-top"><span class="eyebrow">ON YOUR SHELF</span><span id="tape-number" class="mono">01 / 05</span></div>
+        <div class="selected-art" id="selected-art"><img id="selected-label" alt="Cosmic Dreams cassette label"><div class="mini-reels"><i></i><i></i></div><span>SIDE A</span></div>
+        <div class="tape-heading"><h2 id="selected-title">Cosmic Dreams</h2><span id="selected-genre" class="genre">DREAM SYNTH / 108 BPM</span></div>
+        <p id="selected-description" class="description">Soft-focus melodies for somewhere beyond the everyday.</p>
+        <div class="playlist-heading"><span class="eyebrow">THE TRACKLIST</span><button id="upload-button" class="text-button" title="Add local audio to this cassette">+ Add audio</button></div>
+        <input id="audio-upload" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus" multiple hidden>
+        <ol id="playlist" aria-label="Selected cassette playlist"></ol>
+        <button class="primary" id="insert-button" disabled><span>Insert cassette</span><span>↗</span></button>
+        <p class="source-note" id="source-note">Includes original synth studies. Add your own audio to this tape.</p>
+      </aside>
+    </section>
+    <section class="collection" aria-label="Choose a cassette"><div class="collection-label"><span class="eyebrow">THE COLLECTION</span><span class="mono">FIVE MOODS. ONE DECK.</span></div><div id="cassette-list" class="cassette-list"></div></section>
+    <section class="transport" aria-label="Music playback controls">
+      <div class="now-playing"><div class="status-line"><span class="live-dot" id="playing-dot"></span><span id="status" role="status" aria-live="polite">Choose your soundtrack</span></div><strong id="track-title">The room is yours.</strong><span id="track-artist">Insert a cassette to begin</span></div>
+      <div class="playback"><div class="transport-buttons"><button id="previous" title="Previous track" aria-label="Previous track">|◀</button><button id="rewind" title="Rewind tape" aria-label="Rewind tape">◀◀</button><button id="play" class="play" title="Play or pause" aria-label="Play" disabled>▶</button><button id="forward" title="Fast forward tape" aria-label="Fast forward tape">▶▶</button><button id="next" title="Next track" aria-label="Next track">▶|</button></div><div class="seek-row"><span id="elapsed" class="mono">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Track position" disabled><span id="duration" class="mono">0:00</span></div></div>
+      <div class="output"><canvas id="visualizer" width="220" height="34" aria-label="Audio frequency visualizer"></canvas><div class="output-controls"><label for="volume">VOL</label><input id="volume" type="range" min="0" max="100" value="70" aria-label="Volume"><span id="volume-value" class="mono">70</span><button id="eject" disabled>Eject ↑</button><button id="lid" title="Open or close player lid">Lid ↑</button></div></div>
+    </section>
+  </main>
+  <footer><span>A PHYSICAL FEELING. A DIGITAL COLLECTION.</span><span id="attribution">Your local audio stays on your device.</span><span>EST. 2026 <span class="footer-mark">T//C</span></span></footer>
+  <dialog id="help"><button id="close-help" aria-label="Close instructions" class="dialog-close">×</button><span class="eyebrow">WELCOME TO THE CLUB</span><h2>A small ritual.</h2><p>Choose one of the five tapes in the rack or collection. Drag the room to look around, or choose <b>Inspect tape</b> to turn the selected cassette in your hands.</p><p>Press <b>Insert cassette</b>, then <b>Play</b>. Rewind and fast forward wind the tape until you pause. Eject returns the same cassette to its original slot.</p><p><b>Add audio</b> accepts multiple local files and adds them to the selected tape’s playlist. Files stay in this browser tab and are cleared on reload. Only publish audio you own or have permission to use.</p><p class="mono">SPACE · PLAY / PAUSE &nbsp; ← / → · SEEK 5 SECONDS<br>ESC · LEAVE INSPECTION</p><p class="source-note">The included synth studies are generated by the original project’s audio engine. They contain no commercial recordings.</p></dialog>
+  <script type="module" src="./js/app.js"></script>
+  <script>window.addEventListener('error',e=>{const b=document.getElementById('error-banner');if(b){b.hidden=false;b.textContent='The room could not load. Reload the page or try a browser with WebGL enabled.';}});</script>
+</body>
+</html>

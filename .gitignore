@@ -1,0 +1,6 @@
+node_modules/
+desktop-preview.png
+mobile-preview.png
+inspection-preview.png
+*.tar.gz
+*.zip

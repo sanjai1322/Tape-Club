@@ -1,0 +1,71 @@
+{
+  "browser": "Chrome / software WebGL",
+  "viewport": "1440×1000 and 390×844",
+  "reports": [
+    {
+      "name": "five persistent cassettes; initial controls and desktop layout",
+      "result": "passed"
+    },
+    {
+      "name": "rack hit testing, hover lift and click selection",
+      "result": "passed"
+    },
+    {
+      "name": "inspect selected cassette, drag 360 degrees, return safely",
+      "result": "passed"
+    },
+    {
+      "name": "cosmic: same object inserts, aligns with spindle hubs, plays and returns to its slot",
+      "result": "passed"
+    },
+    {
+      "name": "midnight: same object inserts, aligns with spindle hubs, plays and returns to its slot",
+      "result": "passed"
+    },
+    {
+      "name": "aqua: same object inserts, aligns with spindle hubs, plays and returns to its slot",
+      "result": "passed"
+    },
+    {
+      "name": "pixel: same object inserts, aligns with spindle hubs, plays and returns to its slot",
+      "result": "passed"
+    },
+    {
+      "name": "golden: same object inserts, aligns with spindle hubs, plays and returns to its slot",
+      "result": "passed"
+    },
+    {
+      "name": "rapid repeated insert/eject requests do not race or duplicate tapes",
+      "result": "passed"
+    },
+    {
+      "name": "seek, volume, rewind, forward, previous and next track",
+      "result": "passed"
+    },
+    {
+      "name": "local multi-file upload is isolated to its cassette and actually plays",
+      "result": "passed"
+    },
+    {
+      "name": "invalid audio is rejected without corrupting the playlist",
+      "result": "passed"
+    },
+    {
+      "name": "track ends advance the playlist and playback errors never animate silent reels",
+      "result": "passed"
+    },
+    {
+      "name": "lid opens safely during playback, stops audio, and closes",
+      "result": "passed"
+    },
+    {
+      "name": "no geometry growth across tape cycles and no runtime errors",
+      "result": "passed"
+    },
+    {
+      "name": "mobile layout, touch inspection, selection, playback and eject",
+      "result": "passed"
+    }
+  ],
+  "errors": []
+}

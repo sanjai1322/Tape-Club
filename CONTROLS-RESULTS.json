@@ -1,0 +1,10 @@
+{
+  "results": [
+    "3D PLAY key starts actual audio",
+    "3D PAUSE key stops actual audio",
+    "3D volume knob drag updates audio gain",
+    "3D EJECT key returns tape",
+    "Actual touch drag rotates the inspected cassette"
+  ],
+  "errors": []
+}

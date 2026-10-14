@@ -1,0 +1,6 @@
+GSAP 3.12.5 — GreenSock Animation Platform
+Copyright GreenSock. All rights reserved.
+Package license declaration: Standard 'no charge' license.
+https://gsap.com/standard-license/
+https://gsap.com/licensing/
+The original distribution header in gsap.min.js is preserved.

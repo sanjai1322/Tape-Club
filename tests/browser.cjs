@@ -1,0 +1,57 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const base=process.env.TEST_URL||'http://127.0.0.1:4173';
+const reports=[];
+function wav(){const sampleRate=22050,duration=3,b=Buffer.alloc(44+sampleRate*duration*2);b.write('RIFF');b.writeUInt32LE(b.length-8,4);b.write('WAVEfmt ',8);b.writeUInt32LE(16,16);b.writeUInt16LE(1,20);b.writeUInt16LE(1,22);b.writeUInt32LE(sampleRate,24);b.writeUInt32LE(sampleRate*2,28);b.writeUInt16LE(2,32);b.writeUInt16LE(16,34);b.write('data',36);b.writeUInt32LE(b.length-44,40);for(let i=0;i<sampleRate*duration;i++)b.writeInt16LE(Math.sin(i/sampleRate*Math.PI*2*440)*10000,44+i*2);return b;}
+async function check(name,fn){await fn();reports.push({name,result:'passed'});console.log('PASS',name);}
+(async()=>{
+ const browser=await chromium.launch({channel:process.env.BROWSER_CHANNEL||'chrome',headless:true,args:['--use-angle=swiftshader','--enable-webgl','--ignore-gpu-blocklist']});
+ const context=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'reduce'});
+ const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
+ const snap=()=>page.evaluate(()=>tapeClub.snapshot());
+ const idle=()=>page.waitForFunction(()=>window.tapeClub&&!tapeClub.transport.busy,{},{timeout:25000});
+ const invoke=async(fn)=>{await page.evaluate(fn);await idle();};
+ try{
+ await page.goto(base);await page.waitForFunction(()=>window.tapeClub);await page.evaluate(()=>window.gsap.ticker.lagSmoothing(0));await idle();
+ await check('five persistent cassettes; initial controls and desktop layout',async()=>{const s=await snap();assert.equal(s.tapeCount,5);assert.equal(s.state,'empty');assert.equal(await page.locator('.cassette-card').count(),5);assert.equal(await page.locator('#play').isDisabled(),true);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);});
+ await check('rack hit testing, hover lift and click selection',async()=>{await page.waitForTimeout(700);const p=await page.evaluate(()=>{const {tapes,camera,renderer}=tapeClub;const v=tapes.cosmic.localToWorld(tapes.cosmic.position.clone().set(-3.8,1.8,.6)).project(camera),r=renderer.domElement.getBoundingClientRect();return {x:r.x+(v.x+1)*r.width/2,y:r.y+(1-v.y)*r.height/2};});await page.waitForTimeout(500);const before=await page.evaluate(()=>tapeClub.tapes.cosmic.position.y);await page.mouse.move(p.x,p.y);await page.waitForFunction(before=>tapeClub.tapes.cosmic.position.y>before+.2,before,{timeout:10000});await page.mouse.click(p.x,p.y);assert.equal((await snap()).selected,'cosmic');await page.mouse.move(10,10);});
+ await check('inspect selected cassette, drag 360 degrees, return safely',async()=>{await page.click('#inspect-button');await page.waitForFunction(()=>tapeClub.transport.inspecting&&!tapeClub.transport.busy);const before=await page.evaluate(()=>tapeClub.tapes.cosmic.rotation.y);const box=await page.locator('#canvas-container').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.55);await page.mouse.down();await page.mouse.move(box.x+box.width*.85,box.y+box.height*.6,{steps:8});await page.mouse.up();assert.ok(Math.abs(await page.evaluate(()=>tapeClub.tapes.cosmic.rotation.y)-before)>1);await page.click('#inspect-button');await idle();assert.equal((await snap()).inspecting,false);});
+ const baseline=await page.evaluate(()=>({ids:Object.fromEntries(Object.entries(tapeClub.tapes).map(([id,t])=>[id,t.uuid])),memory:tapeClub.renderer.info.memory.geometries}));
+ for(const id of ['cosmic','midnight','aqua','pixel','golden']){
+  await check(`${id}: same object inserts, aligns with spindle hubs, plays and returns to its slot`,async()=>{
+   await page.click(`[data-tape="${id}"]`);await page.click('#insert-button');await idle();let s=await snap();assert.equal(s.loaded,id);assert.equal(s.state,'ready');assert.equal(s.lidOpen,false);
+   const alignment=await page.evaluate(()=>{const {tapes,player,transport}=tapeClub;const t=tapes[transport.loaded];return {position:t.position.distanceTo(player.insertion.position),rotation:t.rotation.x,hubZ:t.position.z-.09,spindleZ:player.spindles[0].position.z,uuid:t.uuid};});assert.ok(alignment.position<1e-5);assert.ok(Math.abs(alignment.rotation+Math.PI/2)<1e-5);assert.ok(Math.abs(alignment.hubZ-alignment.spindleZ)<1e-5);assert.equal(alignment.uuid,baseline.ids[id]);
+   await page.click('#play');await idle();await page.waitForFunction(()=>tapeClub.audio.audioEl.currentTime>.15);assert.equal((await snap()).state,'playing');assert.ok(await page.evaluate(()=>Math.max(...tapeClub.audio.getLevelSegments(10,true)))>.02);
+   await page.click('#play');await idle();const r=await page.evaluate(()=>tapeClub.transport.tape.userData.leftReel.rotation.z);await page.waitForTimeout(200);assert.ok(Math.abs((await page.evaluate(()=>tapeClub.transport.tape.userData.leftReel.rotation.z))-r)<1e-6);
+   await page.click('#eject');await idle();s=await snap();assert.equal(s.state,'empty');assert.equal(s.loaded,null);
+   const returned=await page.evaluate(id=>{const t=tapeClub.tapes[id],slot=tapeClub.slots[id];return {uuid:t.uuid,dx:t.position.x-slot.position.x,dz:t.position.z-slot.position.z,dy:t.position.y-slot.position.y,rotation:t.rotation.toArray().slice(0,3)};},id);assert.equal(returned.uuid,baseline.ids[id]);assert.ok(Math.abs(returned.dx)<1e-5&&Math.abs(returned.dz)<1e-5);assert.ok(Math.abs(returned.dy-.65)<1e-5);assert.ok(returned.rotation.every(n=>Math.abs(n)<1e-5));
+  });
+ }
+ await check('rapid repeated insert/eject requests do not race or duplicate tapes',async()=>{await invoke(async()=>{const t=tapeClub.transport;const a=t.insert();const b=t.insert();const c=t.eject();await Promise.all([a,b,c]);});assert.equal((await snap()).loaded,'golden');assert.equal((await snap()).tapeCount,5);});
+ await check('seek, volume, rewind, forward, previous and next track',async()=>{
+  await invoke(()=>tapeClub.transport.seek(.5));assert.ok(Math.abs(await page.evaluate(()=>tapeClub.audio.audioEl.currentTime)-16)<.1);
+  await invoke(()=>tapeClub.transport.volume(.32));assert.equal(await page.evaluate(()=>tapeClub.audio.volume),.32);
+  await invoke(()=>tapeClub.transport.wind('rewind'));const a=await page.evaluate(()=>tapeClub.audio.audioEl.currentTime);await page.waitForFunction(a=>tapeClub.audio.audioEl.currentTime<a-.1,a,{timeout:12000});await invoke(()=>tapeClub.transport.pause());
+  await invoke(()=>tapeClub.transport.wind('forward'));const b=await page.evaluate(()=>tapeClub.audio.audioEl.currentTime);await page.waitForFunction(b=>tapeClub.audio.audioEl.currentTime>b+.1,b,{timeout:12000});await invoke(()=>tapeClub.transport.pause());
+  await page.click('#next');await idle();assert.equal(await page.evaluate(()=>tapeClub.audio.index),1);await page.click('#previous');await idle();assert.equal(await page.evaluate(()=>tapeClub.audio.index),0);
+ });
+ await check('local multi-file upload is isolated to its cassette and actually plays',async()=>{
+  await page.setInputFiles('#audio-upload',[{name:'My local A.wav',mimeType:'audio/wav',buffer:wav()},{name:'My local B.wav',mimeType:'audio/wav',buffer:wav()}]);await idle();assert.equal(await page.evaluate(()=>tapeClub.audio.playlists.golden.length),4);assert.equal(await page.evaluate(()=>tapeClub.audio.playlists.cosmic.length),2);assert.equal(await page.evaluate(()=>tapeClub.audio.track.local),true);await page.click('#play');await idle();await page.waitForFunction(()=>tapeClub.audio.audioEl.currentTime>.2);assert.ok(Math.abs(await page.evaluate(()=>tapeClub.audio.audioEl.duration)-3)<.1);assert.ok(await page.evaluate(()=>Math.max(...tapeClub.audio.getLevelSegments(10,true)))>.1);await page.click('#play');await idle();
+ });
+ await check('invalid audio is rejected without corrupting the playlist',async()=>{await page.setInputFiles('#audio-upload',{name:'Broken.wav',mimeType:'audio/wav',buffer:Buffer.from('invalid data')});await idle();assert.equal(await page.evaluate(()=>tapeClub.audio.playlists.golden.length),4);assert.match(await page.locator('#error-banner').innerText(),/cannot decode/);});
+ await check('track ends advance the playlist and playback errors never animate silent reels',async()=>{
+  await invoke(()=>tapeClub.transport.chooseTrack('golden',2));await page.click('#play');await idle();await invoke(()=>tapeClub.transport.seek(.93));await page.waitForFunction(()=>tapeClub.audio.index===3&&!tapeClub.transport.busy,{},{timeout:10000});assert.equal((await snap()).state,'playing');await page.click('#play');await idle();
+  const state=await page.evaluate(async()=>{const a=tapeClub.audio;const old=a.audioEl.play;a.audioEl.play=()=>Promise.reject(new DOMException('blocked','NotAllowedError'));await tapeClub.transport.play();a.audioEl.play=old;return tapeClub.transport.state;});assert.equal(state,'paused');assert.equal(await page.evaluate(()=>tapeClub.transport.tape.userData.state.leftRPM),0);
+ });
+ await check('lid opens safely during playback, stops audio, and closes',async()=>{await page.click('#play');await idle();await page.click('#lid');await idle();assert.equal((await snap()).lidOpen,true);assert.equal(await page.evaluate(()=>tapeClub.audio.audioEl.paused),true);await page.click('#lid');await idle();assert.equal((await snap()).lidOpen,false);});
+ await check('no geometry growth across tape cycles and no runtime errors',async()=>{assert.equal(await page.evaluate(()=>tapeClub.renderer.info.memory.geometries),baseline.memory);assert.deepEqual(errors,[]);});
+ await page.click('#eject');await idle();await page.click('[data-tape="cosmic"]');await page.screenshot({path:path.resolve('desktop-preview.png'),fullPage:true});
+ const mobileContext=await browser.newContext({viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'});const mobile=await mobileContext.newPage();mobile.on('pageerror',e=>errors.push(e.message));await mobile.goto(base);await mobile.waitForFunction(()=>window.tapeClub);await mobile.evaluate(()=>window.gsap.ticker.lagSmoothing(0));
+ await check('mobile layout, touch inspection, selection, playback and eject',async()=>{
+  assert.equal(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await mobile.click('[data-tape="pixel"]');await mobile.click('#inspect-button');await mobile.waitForFunction(()=>tapeClub.transport.inspecting&&!tapeClub.transport.busy);await mobile.click('#inspect-button');await mobile.waitForFunction(()=>!tapeClub.transport.busy);await mobile.click('#insert-button');await mobile.waitForFunction(()=>!tapeClub.transport.busy);await mobile.click('#play');await mobile.waitForFunction(()=>tapeClub.audio.audioEl.currentTime>.1);await mobile.click('#eject');await mobile.waitForFunction(()=>!tapeClub.transport.busy);assert.equal(await mobile.evaluate(()=>tapeClub.transport.loaded),null);await mobile.screenshot({path:path.resolve('mobile-preview.png'),fullPage:true});assert.deepEqual(errors,[]);
+ });
+ console.log(JSON.stringify(await snap()));
+ }finally{fs.writeFileSync('TEST-RESULTS.json',JSON.stringify({browser:'Chrome / software WebGL',viewport:'1440×1000 and 390×844',reports,errors},null,2));await browser.close();}
+})().catch(e=>{console.error(e);process.exitCode=1});
