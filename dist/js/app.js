@@ -8,7 +8,8 @@ import {createRack} from './rack.js';
 import {createStudioEnvironment,createFloorShadowTexture} from './environment.js';
 import {AudioEngine} from './audio.js';
 import {Transport} from './transport.js';
-import {batchStaticDetails} from './resources.js';
+import {batchStaticDetails,shareIdenticalGeometry} from './resources.js';
+import {ALBUMS} from './library.js';
 const $=id=>document.getElementById(id),gsap=window.gsap;
 const keys=Object.keys(CASSETTE_THEMES);
 const descriptions={cosmic:['Dream synth','Soft-focus melodies for somewhere beyond the everyday.'],midnight:['Night drive','Crimson lights. Empty roads. A soundtrack for the way home.'],aqua:['Ocean ambient','Crystal-clear tones from a little below the surface.'],pixel:['Arcade electronica','A pocket of bright, playful energy. One more level.'],golden:['Sunset downtempo','Warm melodies for the part of the day you wish would last.']};
@@ -35,8 +36,20 @@ const tapes={},slots={};keys.forEach((id,i)=>{const tape=createCassette({theme:i
 // Deduplicate identical procedural buffer geometries once, including all five
 // sets of screws, reels, shell halves and repeated deck fittings.
 Object.values(tapes).forEach(t=>batchStaticDetails(t));batchStaticDetails(player,[...player.interactiveTargets,...player.animatedMeshes]);
-const geometryCache=new Map();
-scene.traverse(o=>{if(!o.isMesh)return;const a=o.geometry.attributes.position?.array;const idx=o.geometry.index?.array;if(a){let h=2166136261;const b=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);for(let i=0;i<b.length;i++){h^=b[i];h=Math.imul(h,16777619);}const signature=`${a.length}:${idx?.length||0}:${h}:${o.geometry.attributes.uv?.count||0}`;const old=geometryCache.get(signature);if(old&&old!==o.geometry){o.geometry.dispose();o.geometry=old;}else geometryCache.set(signature,o.geometry);}o.castShadow=!o.material.transparent;o.receiveShadow=!o.material.transparent;});
+shareIdenticalGeometry(scene);
+scene.traverse(o=>{if(o.isMesh){o.castShadow=!o.material.transparent;o.receiveShadow=!o.material.transparent;}});
+function applyMode(mode){
+  const dark=mode==='dark';document.documentElement.dataset.mode=mode;
+  const background=dark?'#14181e':'#f2f3f0';
+  floor.material.color.set(background);renderer.setClearColor(background,1);
+  keyLight.intensity=dark?2.1:2.8;fill.intensity=dark?1.8:1.5;
+  floorShadow.material.opacity=dark?.35:.18;contactMaterial.opacity=dark?.8:.6;
+  $('mode-toggle').setAttribute('aria-pressed',String(dark));
+  $('mode-toggle').querySelector('span').textContent=dark?'Light mode':'Dark mode';
+  document.querySelector('meta[name="theme-color"]').content=background;
+}
+applyMode(document.documentElement.dataset.mode||'light');
+$('mode-toggle').onclick=()=>{const mode=document.documentElement.dataset.mode==='dark'?'light':'dark';applyMode(mode);try{localStorage.setItem('tape-club-mode',mode)}catch{}};
 let deckView=false,inspectionView=false,roomPose;
 floor.castShadow=false;floor.receiveShadow=false;floorShadow.castShadow=false;floorShadow.receiveShadow=true;
 function cameraMove(pos,target,duration=.65){if(matchMedia('(prefers-reduced-motion: reduce)').matches)duration=.08;gsap.to(camera.position,{x:pos.x,y:pos.y,z:pos.z,duration,ease:'power2.inOut',overwrite:true});gsap.to(controls.target,{x:target.x,y:target.y,z:target.z,duration,ease:'power2.inOut',overwrite:true});}
@@ -52,7 +65,7 @@ function showError(message){$('error-banner').textContent=message;$('error-banne
 const transport=new Transport({scene,player,tapes,slots,audio,onChange:()=>renderUI(),onError:showError,resetView:changeView});
 let renderedPlaylist='',renderedSelection='';const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;function animateSelection(){if(reducedMotion)return;gsap.fromTo(['#selected-art','#selected-title','#selected-genre','#selected-description'],{y:9,opacity:0},{y:0,opacity:1,duration:.5,stagger:.055,ease:'power3.out',overwrite:true});}
 const statusNames={empty:'Choose your soundtrack',inserting:'Inserting cassette',ready:'Ready when you are',starting:'Starting audio',playing:'Now playing',paused:'Paused',rewind:'Rewinding',forward:'Fast forwarding',ejecting:'Returning to the shelf',lid:'Moving the lid',track:'Loading track'};
-keys.forEach((id,i)=>{const b=document.createElement('button');b.type='button';b.className='cassette-card';b.dataset.tape=id;b.style.setProperty('--accent',CASSETTE_THEMES[id].shellColor);b.innerHTML=`<span class="tape-swatch" aria-hidden="true"></span><span><span class="card-name">${displayName(id)}</span><span class="card-meta">${String(i+1).padStart(2,'0')} / ${descriptions[id][0].toUpperCase()}</span></span>`;b.onclick=()=>transport.select(id);$('cassette-list').appendChild(b);});
+keys.forEach((id,i)=>{const b=document.createElement('button');b.type='button';b.className='cassette-card';b.dataset.tape=id;b.style.setProperty('--accent',CASSETTE_THEMES[id].shellColor);b.innerHTML=`<span class="tape-swatch" aria-hidden="true"><img src="./assets/${id}.png" alt="" draggable="false"></span><span><span class="card-name">${displayName(id)}</span><span class="card-meta">${String(i+1).padStart(2,'0')} / ${descriptions[id][0].toUpperCase()}</span></span>`;b.onclick=()=>transport.select(id);$('cassette-list').appendChild(b);});
 function renderUI(){
   const selected=transport.selected,loaded=transport.loaded,busy=transport.busy,state=transport.state;
   document.querySelectorAll('.cassette-card').forEach(b=>{b.classList.toggle('selected',b.dataset.tape===selected);b.setAttribute('aria-pressed',String(b.dataset.tape===selected));b.disabled=busy;});
@@ -63,12 +76,25 @@ function renderUI(){
   $('inspect-button').disabled=busy||selected===loaded;$('inspect-button').textContent=transport.inspecting?'Return to shelf ↙':'Inspect tape ↗';
   $('status').textContent=statusNames[state];$('play').disabled=busy||!loaded;$('play').textContent=state==='playing'?'Ⅱ':'▶';$('play').setAttribute('aria-label',state==='playing'?'Pause':'Play');$('playing-dot').classList.toggle('active',state==='playing');
   ['previous','next','rewind','forward','eject','seek'].forEach(id=>$(id).disabled=busy||!loaded);$('lid').disabled=busy||transport.inspecting;$('lid').textContent=transport.lidOpen?'Lid ↓':'Lid ↑';$('rewind').classList.toggle('active',state==='rewind');$('forward').classList.toggle('active',state==='forward');
-  $('upload-button').disabled=busy;$('volume').value=Math.round(audio.volume*100);$('volume-value').textContent=Math.round(audio.volume*100);
+  document.querySelectorAll('.album-add').forEach(b=>b.disabled=busy);$('upload-button').disabled=busy;$('volume').value=Math.round(audio.volume*100);$('volume-value').textContent=Math.round(audio.volume*100);
   $('source-note').textContent=`${list.length} tracks on this tape. Local additions stay in this tab.`;
   if(loaded&&audio.theme===loaded&&audio.track){$('track-title').textContent=audio.track.title;$('track-artist').textContent=`${displayName(loaded)} · ${audio.track.artist}`;$('attribution').textContent=audio.track.attribution||'Owner-provided audio';}
   else{$('track-title').textContent='The room is yours.';$('track-artist').textContent='Insert a cassette to begin';$('attribution').textContent='Your local audio stays on your device.';}
 }
 function formatTime(s){if(!Number.isFinite(s)||s<0)return '0:00';return `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;}
+ALBUMS.forEach(album=>{
+  const card=document.createElement('article');card.className='album-card';
+  card.innerHTML=`<div class="album-cover cover-${album.id}" style="--cover:${album.color}" aria-hidden="true"><span class="cover-kicker">TAPE//CLUB SELECTS</span><div class="cover-graphic"></div><strong>${album.name}</strong><span class="cover-genre">${album.genre.toUpperCase()} / VOL. 01</span></div><div class="album-info"><span class="eyebrow">${album.genre} · ${album.tracks.length} TRACKS</span><h3>${album.name}</h3><p>${album.tracks.map(t=>t.title).join(' / ')}</p></div><button class="album-add" data-album="${album.id}">Add to tape <span aria-hidden="true">＋</span></button>`;
+  card.querySelector('button').onclick=()=>transport.run(async()=>{
+    const id=transport.selected,list=audio.playlists[id];const fresh=album.tracks.filter(t=>!list.some(old=>old.catalogId===t.catalogId));
+    if(!fresh.length){$('library-status').textContent=`${album.name} is already on ${displayName(id)}. Choose its tracks in the tracklist.`;return;}
+    const start=list.length;list.push(...fresh.map(t=>({...t})));renderedPlaylist='';
+    if(transport.loaded!==id){audio.indices[id]=start;}
+    $('library-status').textContent=`Added ${fresh.length} tracks from ${album.name} to ${displayName(id)}. ${transport.loaded===id?'Choose a track above to listen.':'Insert the cassette and press Play.'}`;
+    renderUI();
+  });
+  $('album-grid').appendChild(card);
+});
 $('insert-button').onclick=()=>transport.insert();$('eject').onclick=()=>transport.eject();$('play').onclick=()=>transport.state==='playing'?transport.pause():transport.play();$('rewind').onclick=()=>transport.wind('rewind');$('forward').onclick=()=>transport.wind('forward');$('previous').onclick=()=>transport.track(-1);$('next').onclick=()=>transport.track(1);$('lid').onclick=()=>transport.lid(!transport.lidOpen);$('inspect-button').onclick=()=>transport.inspect();
 $('seek').oninput=e=>transport.seek(Number(e.target.value)/1000);$('volume').oninput=e=>transport.volume(Number(e.target.value)/100);
 $('view-room').onclick=async()=>{if(transport.busy)return;if(transport.inspecting)await transport.inspect(false);deckView=false;fitRoom();$('view-room').classList.add('active');$('view-deck').classList.remove('active');};

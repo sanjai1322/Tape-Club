@@ -5,12 +5,13 @@
   <meta name="theme-color" content="#f2f3f0"><meta name="description" content="Five translucent cassettes. One clear acrylic deck. A tactile 3D listening room for your music.">
   <title>TAPE//CLUB — The listening room</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='10' width='60' height='44' rx='8' fill='%23282c31'/%3E%3Ccircle cx='20' cy='30' r='8' fill='%23c4c0fa'/%3E%3Ccircle cx='44' cy='30' r='8' fill='%23c4c0fa'/%3E%3C/svg%3E">
+  <script>try{document.documentElement.dataset.mode=localStorage.getItem("tape-club-mode")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch{document.documentElement.dataset.mode="light"}</script>
   <link rel="stylesheet" href="./style.css">
   <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
   <script src="./vendor/gsap.min.js"></script>
 </head>
 <body>
-  <header class="masthead"><a class="wordmark" href="./" aria-label="TAPE CLUB home">TAPE<span>//</span>CLUB<sup>®</sup></a><div class="edition">THE LISTENING ROOM <span>VOL. 01 / FIVE TAPES</span></div><button id="help-button" class="text-button">How to listen <span>↗</span></button></header>
+  <header class="masthead"><a class="wordmark" href="./" aria-label="TAPE CLUB home">TAPE<span>//</span>CLUB<sup>®</sup></a><div class="edition">THE LISTENING ROOM <span>VOL. 01 / FIVE TAPES</span></div><div class="header-actions"><button id="mode-toggle" class="mode-toggle" aria-label="Dark mode" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14A8.5 8.5 0 0 1 10 3.5 8.5 8.5 0 1 0 20.5 14Z"/></svg><span>Dark mode</span></button><button id="help-button" class="text-button">How to listen <span>↗</span></button></div></header>
   <main>
     <section class="studio" aria-label="Cassette collection and player">
       <div class="stage" id="stage">
@@ -37,6 +38,12 @@
       <div class="now-playing"><div class="status-line"><span class="live-dot" id="playing-dot"></span><span id="status" role="status" aria-live="polite">Choose your soundtrack</span></div><strong id="track-title">The room is yours.</strong><span id="track-artist">Insert a cassette to begin</span></div>
       <div class="playback"><div class="transport-buttons"><button id="previous" title="Previous track" aria-label="Previous track">|◀</button><button id="rewind" title="Rewind tape" aria-label="Rewind tape">◀◀</button><button id="play" class="play" title="Play or pause" aria-label="Play" disabled>▶</button><button id="forward" title="Fast forward tape" aria-label="Fast forward tape">▶▶</button><button id="next" title="Next track" aria-label="Next track">▶|</button></div><div class="seek-row"><span id="elapsed" class="mono">0:00</span><input id="seek" type="range" min="0" max="1000" value="0" aria-label="Track position" disabled><span id="duration" class="mono">0:00</span></div></div>
       <div class="output"><canvas id="visualizer" width="220" height="34" aria-label="Audio frequency visualizer"></canvas><div class="output-controls"><label for="volume">VOL</label><input id="volume" type="range" min="0" max="100" value="70" aria-label="Volume"><span id="volume-value" class="mono">70</span><button id="eject" disabled>Eject ↑</button><button id="lid" title="Open or close player lid">Lid ↑</button></div></div>
+    </section>
+    <section class="music-library" aria-labelledby="library-title">
+      <div class="library-heading"><div><span class="eyebrow">THE RECORD STORE</span><h2 id="library-title">Find your next <em>rotation.</em></h2></div><p>Full-length picks across five genres.<br>Choose a sampler to add it to your selected tape.</p></div>
+      <div class="album-grid" id="album-grid"></div>
+      <div class="library-footnote"><span>Curated genre samplers · Music by Kevin MacLeod · Free to use with attribution</span><a href="./music-credits.html" target="_blank" rel="noopener">Music credits &amp; licenses ↗</a></div>
+      <p class="library-status" id="library-status" role="status" aria-live="polite"></p>
     </section>
   </main>
   <footer><span>A PHYSICAL FEELING. A DIGITAL COLLECTION.</span><span id="attribution">Your local audio stays on your device.</span><span>EST. 2026 <span class="footer-mark">T//C</span></span></footer>

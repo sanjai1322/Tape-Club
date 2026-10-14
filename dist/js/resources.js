@@ -1,5 +1,17 @@
 import {mergeGeometries} from '../vendor/BufferGeometryUtils.js';
 import * as THREE from 'three';
+// Include normals, UVs and indices: identical positions alone are insufficient.
+export function shareIdenticalGeometry(root){
+  const buckets=new Map();
+  const arrays=g=>[...Object.keys(g.attributes).sort().map(k=>g.attributes[k].array),...(g.index?[g.index.array]:[])];
+  root.traverse(o=>{if(!o.isMesh)return;const g=o.geometry,parts=arrays(g);let h=2166136261;
+    for(const a of parts){const bytes=new Uint8Array(a.buffer,a.byteOffset,a.byteLength);for(const b of bytes){h^=b;h=Math.imul(h,16777619);}}
+    const key=Object.keys(g.attributes).sort().join(',')+':'+h+':'+JSON.stringify(g.groups);
+    const candidates=buckets.get(key)||[];
+    const same=candidates.find(old=>{const others=arrays(old);return parts.length===others.length&&parts.every((a,i)=>a.constructor===others[i].constructor&&a.length===others[i].length&&a.every((n,j)=>n===others[i][j]));});
+    if(same&&same!==g){g.dispose();o.geometry=same;}else if(!same){candidates.push(g);buckets.set(key,candidates);}
+  });
+}
 export function batchStaticDetails(root,interactiveTargets=[]){
   const protectedMeshes=new Set(interactiveTargets);
   root.traverse(group=>{

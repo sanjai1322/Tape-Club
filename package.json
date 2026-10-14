@@ -1,1 +1,13 @@
-{"name":"tape-club","version":"1.0.0","private":true,"type":"module","scripts":{"start":"node server.mjs","test":"node --test tests/state.test.mjs && node tests/browser.cjs && node tests/mechanics.cjs && node tests/controls.cjs"},"devDependencies":{"playwright":"1.58.2"}}
+{
+  "name": "tape-club",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/state.test.mjs && node tests/browser.cjs && node tests/mechanics.cjs && node tests/controls.cjs && node tests/polish.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.58.2"
+  }
+}

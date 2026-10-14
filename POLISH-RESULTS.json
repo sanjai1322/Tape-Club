@@ -1,0 +1,29 @@
+{
+  "reports": [
+    {
+      "name": "five detailed collection artwork thumbnails load",
+      "result": "passed"
+    },
+    {
+      "name": "dark mode changes UI and 3D floor, persists across reload",
+      "result": "passed"
+    },
+    {
+      "name": "album sampler adds once to only its selected cassette",
+      "result": "passed"
+    },
+    {
+      "name": "all ten included MP3s decode and produce real audio",
+      "result": "passed"
+    },
+    {
+      "name": "normal-motion inspection renders without errors and label layers have depth separation",
+      "result": "passed"
+    },
+    {
+      "name": "mobile dark layout fits and mode toggle remains usable",
+      "result": "passed"
+    }
+  ],
+  "errors": []
+}

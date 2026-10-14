@@ -540,7 +540,7 @@ import { holographicSheen } from './hologram.js';
         color: new THREE.Color(theme.shellColor),
         transparent: true,
         opacity: themeKey === 'midnight' ? 0.88 : 0.72,
-        roughness: 0.04,
+        roughness: 0.12,
         metalness: 0.08,
         ior: 1.52,
         clearcoat: 1.0,
@@ -557,7 +557,7 @@ import { holographicSheen } from './hologram.js';
         color: new THREE.Color(theme.rimColor),
         transparent: true,
         opacity: 0.82,
-        roughness: 0.05,
+        roughness: 0.12,
         metalness: 0.14,
         clearcoat: 1.0,
         iridescence: 0.94,
@@ -568,7 +568,10 @@ import { holographicSheen } from './hologram.js';
 
       const labelMat = new THREE.MeshBasicMaterial({
         map: colorTexture,
-        toneMapped: false
+        toneMapped: false,
+        polygonOffset: true,
+        polygonOffsetFactor: -1,
+        polygonOffsetUnits: -1
       });
 
       holographicSheen(shellMat,themeKey==='midnight'?.48:.85);
@@ -680,10 +683,11 @@ import { holographicSheen } from './hologram.js';
       // Labels (Front +Z and Back -Z)
       const labelGeom = createLabelGeometry(labelW, labelH, 0.22, winHalfSpan, winRadius, winCenterY - labelCenterY);
       const frontLabel = new THREE.Mesh(labelGeom, labelMat);
-      frontLabel.position.set(0, labelCenterY, D * 0.5 + 0.008);
+      // The bevel reaches z=.483. The old .483 label was coplanar and flickered.
+      frontLabel.position.set(0, labelCenterY, D * 0.5 + 0.035);
       const backLabel = new THREE.Mesh(labelGeom, labelMat);
       backLabel.rotation.y = Math.PI;
-      backLabel.position.set(0, labelCenterY, -(D * 0.5 + 0.008));
+      backLabel.position.set(0, labelCenterY, -(D * 0.5 + 0.035));
       cassetteGroup.add(frontLabel, backLabel);
 
       // Reels

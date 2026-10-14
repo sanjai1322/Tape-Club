@@ -9,10 +9,9 @@ export function holographicSheen(material,strength=1){
       float holoEdge = pow(1.0-holoFacing,2.2);
       float holoPhase = vHoloLocal.x*.105 + vHoloLocal.y*.14 + (1.0-holoFacing)*1.4 + normalize(vHoloView).x*.6 + uHoloTime*.055;
       vec3 holoSpectrum = .5 + .5*cos(6.283185*(holoPhase+vec3(.0,.33,.67)));
-      float holoBand = pow(max(0.0,sin(holoPhase*6.283185)),28.0);
-      float foilGrain = fract(sin(dot(floor(vHoloLocal.xy*125.0),vec2(127.1,311.7)))*43758.5453);
-      float foilGlint = pow(foilGrain,65.0)*holoBand;
-      outgoingLight += (holoSpectrum*(holoEdge*.42+holoBand*.28)+vec3(foilGlint*.9))*${strength.toFixed(2)};
+      // Broad, continuous highlights avoid subpixel glitter aliasing during rotation.
+      float holoBand = pow(max(0.0,sin(holoPhase*6.283185)),8.0);
+      outgoingLight += (holoSpectrum*(holoEdge*.42+holoBand*.32)+vec3(holoBand*.12))*${strength.toFixed(2)};
       #include <opaque_fragment>
     `);
   };

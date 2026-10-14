@@ -24,6 +24,12 @@ Drag an empty part of the room to orbit; scroll/pinch to zoom. The deck’s real
 
 ## Your music
 
+The **Dark mode / Light mode** switch changes both the interface and the 3D studio. It follows your system preference initially and remembers your choice on this device. All five cassettes remain in the collection, with cropped reference-art thumbnails instead of symbolic icons.
+
+The **Record store** includes five curated genre samplers: pop, rock, electronic, jazz and funk. **Add to tape** adds a sampler's two full-length recordings to the selected cassette, without duplicate additions or replacing local files. Insert that cassette and press Play, or select a new track if it is already loaded. Sampler additions, like local uploads, last for this tab session. Ten MP3 recordings are bundled locally; they play without a third-party streaming service or internet access.
+
+The music is by Kevin MacLeod, licensed under **CC BY 4.0**, free to use with attribution. These are curated samplers, not official artist albums or chart rankings. The recordings are copyrighted, not public domain. Full credits, source links and license links are in **Music credits & licenses** on the site and `MUSIC-LICENSES.md`. Keep these credits with redistributions.
+
 **Add audio** accepts several local files and adds them to the selected cassette’s own playlist. MP3, WAV, and browser-supported M4A, Ogg, FLAC, AAC, and Opus work. Unsupported/corrupted files are rejected; the limit is 150 MB per file. Files remain on your device, available only in the current tab, and are cleared when the page reloads. Nothing is uploaded to a server.
 
 For permanent playlists, put audio you own or have licensed in `dist/audio/`, then edit `dist/js/playlists.js`:
@@ -37,7 +43,7 @@ Prefer same-origin audio. Remote files need appropriate CORS headers for Web Aud
 
 ## Reference artwork and materials
 
-All five user-supplied reference images are in `dist/assets/`. Only their printed label area is mapped onto the existing label geometry, with the physical reel window cut out. The reference photos are also used for the panel thumbnail. The mechanisms, reels, shell, screws, rack, and player remain real 3D objects. A view-dependent foil shader adds spectral bands and micro-glints to every cassette; the neutral graphite player keeps a restrained cyan/violet sheen.
+All five user-supplied reference images are in `dist/assets/`. Only their printed label area is mapped onto the existing label geometry, with the physical reel window cut out. The reference photos are also used for the panel and collection thumbnails. The mechanisms, reels, shell, screws, rack, and player remain real 3D objects. A view-dependent foil shader adds smooth spectral highlights to every cassette; the neutral graphite player keeps a restrained cyan/violet sheen. Printed labels sit clear of the acrylic bevels with polygon offset to avoid depth fighting; the shader avoids high-frequency glitter that aliases during motion.
 
 ## Structure
 
@@ -64,3 +70,5 @@ npm test
 `BROWSER_CHANNEL=msedge` selects Edge, and `TEST_URL` can select another HTTP origin. See `TEST-RESULTS.json` for the last browser run , `CONTROLS-RESULTS.json` for 3D key/knob and actual touch checks, and `MECHANICS-RESULTS.json` for 7,070 sampled poses across the five insertion/ejection paths, checked against oriented lid and neighboring-cassette bounds. The suite covers five object-preserving cassette cycles, spindle alignment, selection/inspection, real audio analysis, pause/reel synchronization, seek, volume, winding, track navigation, local multi-file playback, invalid audio, ended tracks, rejected play, rapid actions, lid behavior, GPU geometry stability, and a 390px mobile layout. Browser automation verifies decoded playback and analyser output; listening quality and real-device GPU speed remain device dependent.
 
 Three.js licensing is included in `dist/vendor/THREE-LICENSE.txt`. GSAP licensing information is in `dist/vendor/GSAP-LICENSE.txt`. The reference images were supplied by the project owner.
+
+`tests/polish.cjs` additionally checks collection thumbnails, remembered dark mode and scene color, duplicate-safe sampler additions, decoded playback and analyser output for all ten bundled MP3s, label depth separation, normal-motion inspection and mobile dark-mode layout. Results are recorded in `POLISH-RESULTS.json` and `AUDIO-RESULTS.json`.
