@@ -1,6 +1,14 @@
 {
   "name": "tape-club",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "description": "A tactile 3D cassette listening room in the browser.",
+  "author": "Sanjai Builds",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sanjai1322/Tape-Club.git"
+  },
+  "homepage": "https://sanjai1322.github.io/Tape-Club/",
   "private": true,
   "type": "module",
   "scripts": {

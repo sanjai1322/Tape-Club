@@ -45,7 +45,10 @@ export class PlaylistStore{
     this.storage=storage;this.listeners=new Set();this.revision=0;this.warning=storage?'':'Browser storage is disabled. Changes will last only in this tab.';this.urls=new Set();this.languages={};
     this.playlists=Object.fromEntries(Object.keys(CASSETTE_THEMES).map(id=>[id,(PLAYLISTS[id]||[]).map((t,i)=>normalize({...t,id:`seed-${id}-${i}`}))]));
     for(const id of Object.keys(this.playlists))this.languages[id]=languageTabsConfig.defaultLanguage;
-    try{const saved=JSON.parse(storage?.getItem(UI_CONFIG.storageKey)||'null');if(saved?.version===1&&saved.playlists){for(const id of Object.keys(this.playlists)){if(Array.isArray(saved.playlists[id]))this.playlists[id]=saved.playlists[id].slice(0,UI_CONFIG.maxTracksPerCassette).flatMap(t=>{try{return [normalize({...t,src:t.sourceType==='local'?'':t.src})]}catch{return []}});}}}catch{this.warning='Saved playlists could not be read. Your default collection is available.';}
+    try{const saved=JSON.parse(storage?.getItem(UI_CONFIG.storageKey)||'null');if((saved?.version===1||saved?.version===2)&&saved.playlists){for(const id of Object.keys(this.playlists)){if(!Array.isArray(saved.playlists[id]))continue;const seeds=this.playlists[id];let list=saved.playlists[id].slice(0,UI_CONFIG.maxTracksPerCassette).flatMap(t=>{try{return [normalize({...t,src:t.sourceType==='local'?'':t.src})]}catch{return []}});
+      // Version 1 lists predate the full-length default songs: add them once, in front.
+      if(saved.version===1)list=[...seeds.filter(t=>t.catalogId&&!list.some(old=>old.catalogId===t.catalogId)),...list].slice(0,UI_CONFIG.maxTracksPerCassette);
+      this.playlists[id]=list;}if(saved.version===1)this.persistPlaylistState();}}catch{this.warning='Saved playlists could not be read. Your default collection is available.';}
   }
   subscribe(fn){this.listeners.add(fn);return()=>this.listeners.delete(fn)}
   emit(){this.revision++;this.listeners.forEach(fn=>fn());}
@@ -55,7 +58,7 @@ export class PlaylistStore{
   playableIndices(id,language=this.language(id)){return this.playlists[id].flatMap((t,i)=>t.language===language&&isPlayable(t)?[i]:[]);}
   persistPlaylistState(){
     const playlists=Object.fromEntries(Object.entries(this.playlists).map(([id,list])=>[id,list.map(t=>{const copy={...t};if(t.local){delete copy.src;delete copy.unavailable;}return copy;})]));
-    try{this.storage?.setItem(UI_CONFIG.storageKey,JSON.stringify({version:1,playlists}));}catch{this.warning='Browser storage is full or disabled. Changes work in this tab but may not survive a reload.';}
+    try{this.storage?.setItem(UI_CONFIG.storageKey,JSON.stringify({version:2,playlists}));}catch{this.warning='Browser storage is full or disabled. Changes work in this tab but may not survive a reload.';}
     this.emit();
   }
   addTrackToCassette(id,language,track){

@@ -13,5 +13,5 @@ test('persists cassette, language, ordering, edits and removals; English resets 
   reloaded.remove('aqua',b.id);assert.equal(new PlaylistStore(storage).group('aqua','ta').length,0);
 });
 test('corrupt or blocked persistence degrades visibly without preventing use',()=>{
-  const s=new PlaylistStore({getItem:()=>'{',setItem:()=>{throw Error('quota')}});assert.ok(s.warning);assert.equal(s.playlists.cosmic.length,2);s.addTrackToCassette('pixel','hi',{title:'New',sourceType:'audio',src:'https://example.com/a.mp3'});assert.equal(s.group('pixel','hi').length,1);assert.match(s.warning,/full or disabled/);
+  const s=new PlaylistStore({getItem:()=>'{',setItem:()=>{throw Error('quota')}});assert.ok(s.warning);assert.equal(s.playlists.cosmic.length,4);s.addTrackToCassette('pixel','hi',{title:'New',sourceType:'audio',src:'https://example.com/a.mp3'});assert.equal(s.group('pixel','hi').length,1);assert.match(s.warning,/full or disabled/);
 });

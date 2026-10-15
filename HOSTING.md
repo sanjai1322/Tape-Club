@@ -5,6 +5,15 @@ No server code, database or build step is required.
 
 ## 1. Put it online (pick one — all free)
 
+### Option 0 — GitHub Pages (already set up in this repo)
+The repo includes `.github/workflows/deploy-pages.yml`, which publishes `dist/`
+on every push to `main`.
+1. Open <https://github.com/sanjai1322/Tape-Club/settings/pages>.
+2. Under **Build and deployment → Source**, choose **GitHub Actions**.
+3. Open the **Actions** tab and re-run **Deploy to GitHub Pages** (or push any commit).
+4. The site is live at **<https://sanjai1322.github.io/Tape-Club/>** within about a minute.
+
+
 ### Option A — Cloudflare Pages (recommended)
 Fast worldwide, unlimited bandwidth, and has built-in visitor analytics.
 
@@ -39,7 +48,19 @@ Push the repo, then **Settings → Pages → Source: GitHub Actions** and use th
 > Keep `music-credits.html` and `MUSIC-LICENSES.md` with the site — the bundled
 > Kevin MacLeod tracks are CC BY 4.0 and require attribution.
 
-## 2. See how many people are viewing it
+## 2. Before you share the link: set your address (link previews)
+
+WhatsApp, Instagram, X and Facebook need the **full address** of the preview
+image. `dist/index.html` is already set to `https://sanjai1322.github.io/Tape-Club/`.
+If you host somewhere else, replace every `https://sanjai1322.github.io/Tape-Club/`
+(the `canonical`, `og:url`, `og:image` and `twitter:image` tags, plus one comment) with your real
+site address, ending in `/`. Then redeploy.
+
+Check the preview with <https://www.opengraph.xyz> or by pasting the link into a
+WhatsApp chat with yourself. WhatsApp caches previews, so test with a new link
+like `https://your-site/?v=2` if you changed the image.
+
+## 3. See how many people are viewing it
 
 You have two layers. Use either or both.
 
@@ -74,6 +95,15 @@ The footer will then show e.g. `1,234 VISITS · EST. 2026`. Set
 - **Netlify:** Site → **Analytics** (paid add-on).
 - **Vercel:** Project → **Analytics** → Enable (free tier available).
 
-## 3. Updating the site
+## 4. Updating the site
 Edit files in `dist/`, then re-upload the folder (or `git push` if connected to Git).
 Hard-refresh the browser (Ctrl+Shift+R) to see changes immediately.
+
+The offline service worker always fetches fresh files first, so updates show up
+on the next visit. If you add or rename files, add them to the `SHELL` list in
+`dist/sw.js` and bump `VERSION` (for example `tape-club-v2`).
+
+## 5. Installing on a phone
+- **Android (Chrome):** open the site → menu **⋮** → **Install app** / **Add to Home screen**.
+- **iPhone (Safari):** open the site → **Share** → **Add to Home Screen**.
+Installing needs HTTPS, which every host above provides.

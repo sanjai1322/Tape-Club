@@ -6,7 +6,7 @@ const fs=require('node:fs');
  try{
   await page.goto(process.env.TEST_URL||'http://127.0.0.1:4173');await page.waitForFunction(()=>window.tapeClub);
   const result=await page.evaluate(async()=>{
-   const THREE=await import('/vendor/three.module.js');const {OBB}=await import('/vendor/OBB.js');
+   const THREE=await import('/vendor/three.module.min.js');const {OBB}=await import('/vendor/OBB.js');
    const {transport:t,scene,player,tapes}=tapeClub;
    const cassetteBounds=new THREE.Box3(new THREE.Vector3(-5,-3.175,-.63),new THREE.Vector3(5,3.175,.63));
    const lidMeshes=[];player.lidPivotGroup.traverse(o=>{if(o.isMesh){o.geometry.computeBoundingBox();lidMeshes.push(o);}});

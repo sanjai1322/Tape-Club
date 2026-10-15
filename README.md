@@ -1,5 +1,25 @@
 # TAPE//CLUB
 
+**A tactile 3D cassette listening room in the browser.** Pick a tape, insert it, press play.
+Designed & built by **Sanjai Builds**.
+
+**▶ Live site:** <https://sanjai1322.github.io/Tape-Club/>
+
+![TAPE//CLUB in dark mode: five translucent cassettes in an acrylic rack beside a clear deck](docs/cover-desktop-dark.jpg)
+
+| Now playing | Light mode |
+|---|---|
+| ![A cassette playing in the deck with the controls bar glowing](docs/cover-playing.jpg) | ![Golden Hour selected in light mode](docs/cover-desktop-light.jpg) |
+| **Record store** | **How to listen** |
+| ![Five genre samplers in the record store](docs/cover-record-store.jpg) | ![The step-by-step listening guide](docs/cover-guide.jpg) |
+
+<p align="center"><img src="docs/cover-mobile.jpg" alt="TAPE//CLUB on a phone" width="300"></p>
+
+**License:** code is [MIT](LICENSE); cassette artwork © Sanjai Builds; music by Kevin MacLeod (CC BY 4.0); fonts SIL OFL. Full details in [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).
+
+---
+
+
 A working, browser-local 3D cassette listening room, built from the supplied `tape_club_3d_interactive_cassette_player.html`. The original procedural cassette shells, reel assemblies, tape packs, label geometry, player mechanisms, controls, graphite prism shader, studio environment, synth WAV generator, and mechanical sounds are retained and adapted.
 
 ## Start
@@ -10,7 +30,7 @@ Install Node.js 20 or later, open a terminal in this folder, and run:
 npm start
 ```
 
-Open **http://127.0.0.1:4173**. No dependency installation or internet connection is needed to run the website: Three.js 0.162.0, OrbitControls, and GSAP 3.12.5 are included locally (the Space Grotesk / JetBrains Mono / Instrument Serif web fonts load from Google Fonts and fall back to system fonts offline). Use an HTTP server rather than double-clicking the HTML file. Any static host can serve the contents of `dist/`. See **[HOSTING.md](HOSTING.md)** for putting it online and counting viewers.
+Open **http://127.0.0.1:4173**. No dependency installation or internet connection is needed to run the website: Three.js 0.162.0, OrbitControls, and GSAP 3.12.5 are included locally (minified Three.js), and so are the Space Grotesk, JetBrains Mono and Instrument Serif fonts (SIL OFL, `dist/fonts/FONT-LICENSES.txt`). Use an HTTP server rather than double-clicking the HTML file. Any static host can serve the contents of `dist/`. See **[HOSTING.md](HOSTING.md)** for putting it online and counting viewers.
 
 ## Listen
 
@@ -21,6 +41,16 @@ Open **http://127.0.0.1:4173**. No dependency installation or internet connectio
 5. Press **Eject** to return the same object to its slot. Choose another cassette and repeat.
 
 Drag an empty part of the room to orbit; scroll/pinch to zoom. The deck’s real transport keys and volume knob are interactive. **Room** and **Deck** offer camera presets. Space plays/pauses and left/right arrows seek five seconds when focus is outside a form control.
+
+## New in this version
+
+- **Full-length songs by default:** every tape opens with two full-length recordings from the record store (Cosmic → electronic, Midnight → rock, Aqua → jazz, Pixel → pop, Golden → funk), followed by its two short synth studies. Edit `TAPE_SAMPLERS` in `dist/js/playlists.js` to change the pairing. Listeners with older saved playlists get the new songs added once.
+- **Share mix:** copies a link that carries the selected tape's tracklist for the current language (YouTube songs, record-store tracks, audio URLs and synth studies; uploaded files stay private). Opening the link shows an *Add to my tape* card. Code: `dist/js/share.js`.
+- **Lock-screen controls:** play, pause, next/previous and seeking from the phone lock screen, notification shade, keyboard media keys and Bluetooth headphones, with the tape artwork.
+- **Installable app:** `manifest.webmanifest`, icons in `dist/icons/`, and an offline service worker (`dist/sw.js`, not registered on localhost). Bundled MP3s still stream from the network.
+- **Link previews:** Open Graph and Twitter tags with `og-image.jpg` (1200×630). Set your real address in `index.html` (see HOSTING.md).
+- **Faster first load:** minified Three.js, preloaded fonts and modules, and a real progress bar.
+- **First visit:** the How to listen guide opens once and the Insert button pulses until the first insert.
 
 ## Your music
 
@@ -84,10 +114,11 @@ All five user-supplied reference images are in `dist/assets/`. Only their printe
 - `playlist-store.js`, `playlist-ui.js`: validated source adapters, persistent language groups, song form and playlist management.
 - `resources.js`: batching and geometry reuse.
 - `app.js`, `style.css`, `index.html`: responsive interface, raycasting, touch, keyboard and rendering. `style.css` is organized into numbered sections with light/dark design tokens at the top.
+- `share.js`: share-a-mix links. `sw.js`, `manifest.webmanifest`, `icons/`: installable, offline-capable app. `fonts/`: self-hosted fonts. `og-image.jpg`: link preview image.
 - `analytics.js`: optional GoatCounter page views, listening events and a public visit count (configured in `config.js`).
 - `tests/results/`: last recorded test reports; screenshots land in `tests/results/screenshots/` (git-ignored).
 
-Only one mechanical/track operation runs at a time. Reels stop on pause, rejected playback, buffering, and hidden tabs. Playback pauses when this tab is hidden. Reduced-motion preferences shorten mechanical moves and remove decorative animation; angle-dependent sheen remains.
+Only one mechanical/track operation runs at a time. Reels stop on pause, rejected playback, buffering, and hidden tabs. Audio files keep playing when the tab is hidden or the phone is locked, so lock-screen and headphone controls work through the Media Session API; YouTube embeds and tape winding pause while hidden. Reduced-motion preferences shorten mechanical moves and remove decorative animation; angle-dependent sheen remains.
 
 GPU resources are shared and static detail meshes are batched. Tape-pack radius changes scale existing geometry rather than rebuilding it. Pixel ratio is capped, delta time is bounded, and resources/object URLs are disposed on exit.
 

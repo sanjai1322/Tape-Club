@@ -2,14 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="referrer" content="strict-origin-when-cross-origin"><meta name="theme-color" content="#f2f3f0"><meta name="description" content="Five translucent cassettes. One clear acrylic deck. A tactile 3D listening room for your music.">
+  <meta name="author" content="Sanjai Builds"><meta name="referrer" content="strict-origin-when-cross-origin"><meta name="theme-color" content="#f2f3f0"><meta name="description" content="Five translucent cassettes. One clear acrylic deck. A tactile 3D listening room for your music.">
   <title>TAPE//CLUB — The listening room</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='10' width='60' height='44' rx='8' fill='%23282c31'/%3E%3Ccircle cx='20' cy='30' r='8' fill='%23c4c0fa'/%3E%3Ccircle cx='44' cy='30' r='8' fill='%23c4c0fa'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/png" sizes="64x64" href="./icons/favicon-64.png">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="TAPE//CLUB">
+  <!-- Link previews (WhatsApp, Instagram, X, Facebook, LinkedIn). Replace https://sanjai1322.github.io/Tape-Club/ with your live address. -->
+  <link rel="canonical" href="https://sanjai1322.github.io/Tape-Club/">
+  <meta property="og:type" content="website"><meta property="og:site_name" content="TAPE//CLUB">
+  <meta property="og:title" content="TAPE//CLUB — The listening room">
+  <meta property="og:description" content="A tactile 3D cassette listening room. Pick a tape, insert it, press play. Built by Sanjai Builds.">
+  <meta property="og:url" content="https://sanjai1322.github.io/Tape-Club/">
+  <meta property="og:image" content="https://sanjai1322.github.io/Tape-Club/og-image.jpg"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="Five translucent TAPE//CLUB cassettes beside the headline Good music. Better rituals.">
+  <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="TAPE//CLUB — The listening room"><meta name="twitter:description" content="A tactile 3D cassette listening room. Built by Sanjai Builds."><meta name="twitter:image" content="https://sanjai1322.github.io/Tape-Club/og-image.jpg">
+  <link rel="preload" href="./fonts/space-grotesk-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="./fonts/jetbrains-mono-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="modulepreload" href="./vendor/three.module.min.js"><link rel="modulepreload" href="./js/app.js">
   <script>try{document.documentElement.dataset.mode=localStorage.getItem("tape-club-mode")||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light")}catch{document.documentElement.dataset.mode="light"}</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="./style.css">
-  <script type="importmap">{"imports":{"three":"./vendor/three.module.js"}}</script>
+  <script type="importmap">{"imports":{"three":"./vendor/three.module.min.js"}}</script>
   <script src="./vendor/gsap.min.js"></script>
 </head>
 <body>
@@ -19,7 +32,11 @@
       <div class="stage" id="stage">
         <div class="stage-heading"><div class="eyebrow"><span class="live-dot"></span> A LITTLE LESS SKIP. A LITTLE MORE LISTEN.</div><h1>Good music.<br><em>Better rituals.</em></h1><p>Pick a tape. Make time for sound.</p></div>
         <div id="canvas-container" aria-label="3D cassette rack and graphite player. Select a tape using the collection buttons below."></div>
-        <div class="loading" id="loading" role="status">Setting up the listening room<span></span></div>
+        <div class="loading" id="loading" role="status"><div class="loading-copy"><span class="loading-label" id="loading-label">Setting up the listening room</span><span class="loading-pct mono" id="loading-pct">0%</span></div><div class="loading-bar" role="progressbar" aria-label="Loading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="loading-bar"><i></i></div></div><script>(()=>{let shown=0,target=8;const bar=document.getElementById('loading-bar'),pct=document.getElementById('loading-pct'),label=document.getElementById('loading-label');
+// While the 3D engine downloads, creep toward 35%; app.js reports real stages after that.
+const creep=setInterval(()=>{if(target<35)target+=(35-target)*.08;},200);
+const draw=()=>{if(!bar.isConnected)return;shown+=(target-shown)*.18;bar.style.setProperty('--p',shown.toFixed(1));pct.textContent=Math.round(shown)+'%';bar.setAttribute('aria-valuenow',Math.round(shown));requestAnimationFrame(draw);};requestAnimationFrame(draw);
+window.tapeLoad=(p,text)=>{clearInterval(creep);target=Math.max(target,p);if(text)label.textContent=text;};})();</script>
         <div class="stage-bottom"><span id="gesture-hint">DRAG TO ORBIT · SCROLL TO ZOOM</span><div class="view-controls"><button id="view-room" aria-label="Reset room view" class="active">Room</button><button id="view-deck">Deck</button><button id="inspect-button">Inspect tape ↗</button></div></div>
         <div id="error-banner" role="alert" hidden></div>
       </div>
@@ -28,7 +45,7 @@
         <div class="selected-art" id="selected-art"><img id="selected-label" alt="Cosmic Dreams cassette label"><div class="mini-reels"><i></i><i></i></div><span>SIDE A</span></div>
         <div class="tape-heading"><h2 id="selected-title">Cosmic Dreams</h2><span id="selected-genre" class="genre">DREAM SYNTH / 108 BPM</span></div>
         <p id="selected-description" class="description">Soft-focus melodies for somewhere beyond the everyday.</p>
-        <div class="playlist-heading"><span class="eyebrow">THE TRACKLIST</span><div class="playlist-actions"><button id="add-song" class="text-button">+ Add song</button><button id="upload-button" class="text-button" title="Upload local audio to this language group">Upload audio</button></div></div><div class="language-tabs" id="language-tabs" role="tablist" aria-label="Track language"></div><div class="playlist-toolbar"><span class="eyebrow">YOUR MIX</span><button id="manage-tracks" class="text-button" aria-pressed="false">Manage</button></div>
+        <div class="playlist-heading"><span class="eyebrow">THE TRACKLIST</span><div class="playlist-actions"><button id="add-song" class="text-button">+ Add song</button><button id="upload-button" class="text-button" title="Upload local audio to this language group">Upload audio</button></div></div><div class="language-tabs" id="language-tabs" role="tablist" aria-label="Track language"></div><div class="playlist-toolbar"><span class="eyebrow">YOUR MIX</span><div class="playlist-actions"><button id="share-mix" class="text-button" title="Copy a link to this tape's tracklist">Share mix ↗</button><button id="manage-tracks" class="text-button" aria-pressed="false">Manage</button></div></div>
         <input id="audio-upload" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.flac,.opus" multiple hidden>
         <ol id="playlist" role="tabpanel" aria-label="Selected cassette playlist"></ol>
         <button class="primary" id="insert-button" disabled><span>Insert cassette</span><span>↗</span></button>
@@ -52,10 +69,46 @@
       <p class="library-status" id="library-status" role="status" aria-live="polite"></p>
     </section>
   </main>
-  <footer><span>A PHYSICAL FEELING. A DIGITAL COLLECTION.</span><span id="attribution">Your local audio stays on your device.</span><span><span id="visit-count" class="visit-count" hidden></span>EST. 2026 <span class="footer-mark">T//C</span></span></footer>
-  <dialog id="help"><button id="close-help" aria-label="Close instructions" class="dialog-close">×</button><span class="eyebrow">WELCOME TO THE CLUB</span><h2>A small ritual.</h2><p>Choose one of the five tapes in the rack or collection. Drag the room to look around, or choose <b>Inspect tape</b> to turn the selected cassette in your hands.</p><p>Press <b>Insert cassette</b>, then <b>Play</b>. Rewind and fast forward wind the tape until you pause. Eject returns the same cassette to its original slot.</p><p><b>Add audio</b> accepts multiple local files and adds them to the selected tape’s playlist. Playlists and supported local audio are saved in this browser. Clearing browser data removes them. Add song accepts YouTube links or licensed audio URLs. YouTube songs play on this page in a visible video player, connected to the deck controls. Some videos restrict embedding; choose another upload if unavailable. Manage lets you edit, move or remove tracks.</p><p class="mono">SPACE · PLAY / PAUSE &nbsp; ← / → · SEEK 5 SECONDS<br>ESC · LEAVE INSPECTION</p><p class="source-note">The included synth studies are generated by the original project’s audio engine. They contain no commercial recordings.</p></dialog>
+  <div id="mix-invite" class="mix-invite" role="dialog" aria-labelledby="mix-invite-title" hidden><span class="eyebrow">A MIX WAS SHARED WITH YOU</span><strong id="mix-invite-title"></strong><p id="mix-invite-text"></p><div class="mix-invite-actions"><button id="mix-accept" class="primary"><span>Add to my tape</span><span>＋</span></button><button id="mix-dismiss" class="text-button">No thanks</button></div></div>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+  <footer><span>A PHYSICAL FEELING. A DIGITAL COLLECTION.</span><span id="attribution">Your local audio stays on your device.</span><span><span id="visit-count" class="visit-count" hidden></span>BUILT BY <strong class="maker">SANJAI BUILDS</strong> · EST. 2026 <span class="footer-mark">T//C</span></span></footer>
+  <dialog id="help" aria-labelledby="help-title"><button id="close-help" aria-label="Close instructions" class="dialog-close">×</button><span class="eyebrow">WELCOME TO THE CLUB</span><h2 id="help-title">How to listen.</h2>
+    <ol class="help-steps">
+      <li><b>Pick a tape.</b> Click any cassette in the 3D rack, or in <b>The Collection</b> row below it.</li>
+      <li><b>Look closer (optional).</b> Press <b>Inspect tape</b> and drag to turn it in your hands. Press <b>Return to shelf</b> or <kbd>Esc</kbd> when done.</li>
+      <li><b>Insert it.</b> Press <b>Insert cassette</b> and wait for the lid to close over the tape.</li>
+      <li><b>Press Play.</b> Use the play button in the control bar, or press <kbd>Space</kbd>. Press it again to pause.</li>
+      <li><b>Control the music.</b> Skip tracks with the outer arrows, hold back or forward with the double arrows, drag the bar to jump, and set <b>VOL</b>.</li>
+      <li><b>Change tapes.</b> Press <b>Eject</b> to return the tape to its slot, then pick another one.</li>
+    </ol>
+    <h3>Add your own music</h3>
+    <ul class="help-list">
+      <li><b>Language tabs</b> (English, Tamil, Hindi, Malayalam, Telugu) keep a separate tracklist for each tape.</li>
+      <li><b>+ Add song</b> takes a YouTube link (steps below) or a direct link to an audio file.</li>
+      <li><b>Upload audio</b> adds MP3, WAV, M4A and more from your device. Files stay in this browser and are never uploaded.</li>
+      <li><b>Record store</b>: press <b>Add to tape</b> to drop a free genre sampler onto the selected tape.</li>
+      <li><b>Manage</b> lets you reorder, edit, move or remove songs.</li>
+    </ul>
+    <h3>Add a YouTube song</h3>
+    <ol class="help-steps">
+      <li><b>Copy the link.</b> On YouTube press <b>Share → Copy link</b>. Normal videos, <b>youtu.be</b>, <b>Shorts</b> and <b>YouTube Music</b> links all work.</li>
+      <li><b>Choose where it goes.</b> Select a tape, then the language tab you want, for example <b>Tamil</b>.</li>
+      <li><b>Press + Add song.</b> Leave <b>Source</b> on <b>YouTube link</b> and paste the link into <b>Song link</b>.</li>
+      <li><b>Fill in the details.</b> Press <b>Get title &amp; artist</b> to fill them in automatically, or type them yourself.</li>
+      <li><b>Press Add to playlist.</b> The song appears in the tracklist with its thumbnail.</li>
+      <li><b>Click the song to play it.</b> The tape goes into the deck and the video plays below the controls. Play, pause, skip and volume work from the deck; rewind and forward jump 10 seconds.</li>
+    </ol>
+    <p class="source-note">YouTube needs an internet connection. Some owners block embedding, and private, age-restricted or region-locked videos won't play. If a browser blocks autoplay, tap play inside the video once.</p>
+    <h3>Get around</h3>
+    <ul class="help-list">
+      <li>Drag the room to look around and scroll or pinch to zoom. <b>Room</b> and <b>Deck</b> jump to preset views.</li>
+      <li><kbd>Space</kbd> play / pause · <kbd>←</kbd> <kbd>→</kbd> seek 5 seconds · <kbd>Esc</kbd> leave inspection.</li>
+    </ul>
+    <p class="source-note"><b>Share mix</b> copies a link to the selected tape's tracklist so friends can add it to theirs. Uploaded files stay on your device and aren't included. Clearing browser data removes your saved playlists and uploads.</p>
+    <p class="help-credit">Designed &amp; built by <b>Sanjai Builds</b>.</p></dialog>
   <script type="module" src="./js/app.js"></script>
   <script type="module" src="./js/analytics.js"></script>
+  <script>if('serviceWorker' in navigator&&!/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname))addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));</script>
   <script>window.addEventListener('error',e=>{const b=document.getElementById('error-banner');if(b){b.hidden=false;b.textContent='The room could not load. Reload the page or try a browser with WebGL enabled.';}});</script>
 </body>
 </html>

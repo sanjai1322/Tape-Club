@@ -8,6 +8,15 @@
                                 11. Responsive + reduced motion
    ========================================================================== */
 
+/* 0. Fonts — self-hosted, SIL Open Font License (fonts/FONT-LICENSES.txt) */
+@font-face{font-family:'Space Grotesk';src:url('./fonts/space-grotesk-latin-400-normal.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('./fonts/space-grotesk-latin-500-normal.woff2') format('woff2');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Space Grotesk';src:url('./fonts/space-grotesk-latin-700-normal.woff2') format('woff2');font-weight:700;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('./fonts/jetbrains-mono-latin-400-normal.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'JetBrains Mono';src:url('./fonts/jetbrains-mono-latin-600-normal.woff2') format('woff2');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Instrument Serif';src:url('./fonts/instrument-serif-latin-400-normal.woff2') format('woff2');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Instrument Serif';src:url('./fonts/instrument-serif-latin-400-italic.woff2') format('woff2');font-weight:400;font-style:italic;font-display:swap}
+
 /* 1. Tokens -------------------------------------------------------------- */
 :root{
   --font-sans:'Space Grotesk',ui-sans-serif,system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
@@ -112,9 +121,12 @@ h1 em{font-family:var(--font-serif);font-weight:400;letter-spacing:-.01em;color:
 #canvas-container{position:absolute;inset:0;touch-action:none;cursor:grab}
 #canvas-container:active{cursor:grabbing}
 #canvas-container canvas{display:block;width:100%;height:100%}
-.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:12px;background:var(--bg);z-index:3;font-size:13px;color:var(--muted)}
-.loading span{width:16px;height:16px;border:1.5px solid var(--line-strong);border-top-color:var(--text);border-radius:50%;animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
+.loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:var(--bg);z-index:3;font-size:13px;color:var(--muted);transition:opacity .45s}
+.loading.done{opacity:0;pointer-events:none}
+.loading-copy{display:flex;justify-content:space-between;gap:24px;width:min(280px,70%)}
+.loading-pct{color:var(--text)}
+.loading-bar{--p:0;position:relative;width:min(280px,70%);height:3px;border-radius:3px;background:var(--track);overflow:hidden}
+.loading-bar i{position:absolute;inset:0;transform-origin:left;transform:scaleX(calc(var(--p) / 100));background:linear-gradient(90deg,#a780ec,#7fdcf0,#f4cc43)}
 .stage-bottom{position:absolute;bottom:18px;left:0;right:22px;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:10px;letter-spacing:.08em;color:var(--subtle)}
 .view-controls{display:flex;gap:6px}
 .view-controls button{border:1px solid var(--line-strong);border-radius:999px;padding:8px 14px;font-size:11px;white-space:nowrap;background:color-mix(in srgb,var(--bg) 72%,transparent);backdrop-filter:blur(10px);transition:background .25s,color .25s,transform .25s var(--ease)}
@@ -168,6 +180,17 @@ h1 em{font-family:var(--font-serif);font-weight:400;letter-spacing:-.01em;color:
 .primary::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 20%,#d7c4ff30 40%,#c5fffb40 50%,transparent 70%);transform:translateX(-120%);transition:transform .7s}
 .primary:hover:enabled{transform:translateY(-2px);box-shadow:0 10px 22px -8px color-mix(in srgb,var(--selection-accent) 55%,transparent)}
 .primary:hover:enabled::after{transform:translateX(120%)}
+
+.primary.nudge:enabled{animation:nudge 2.2s ease-in-out infinite}
+@keyframes nudge{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--selection-accent) 60%,transparent)}50%{box-shadow:0 0 0 9px transparent}}
+
+.mix-invite{position:fixed;z-index:20;right:24px;bottom:24px;width:min(360px,calc(100vw - 32px));display:flex;flex-direction:column;gap:8px;padding:22px;background:var(--surface);border:1px solid var(--line-strong);border-radius:var(--radius-l);box-shadow:0 24px 60px -20px #000a}
+.mix-invite .eyebrow{color:var(--accent-text)}
+.mix-invite strong{font-size:22px;font-weight:500;letter-spacing:-.03em}
+.mix-invite p{font-size:13px;line-height:1.6;color:var(--muted)}
+.mix-invite-actions{display:flex;align-items:center;gap:16px;margin-top:6px}
+.mix-invite-actions .primary{flex:1}
+.toast{position:fixed;z-index:21;left:50%;bottom:24px;transform:translateX(-50%);max-width:min(520px,calc(100vw - 32px));padding:12px 18px;border-radius:999px;background:var(--ink);color:var(--ink-contrast);font-size:13px;line-height:1.5;box-shadow:0 14px 40px -12px #0008;text-align:center}
 
 /* 6. Collection ---------------------------------------------------------- */
 .collection{padding:20px 0;border-top:1px solid var(--line);display:flex;gap:20px;align-items:center}
@@ -267,6 +290,16 @@ dialog{border:1px solid var(--line-strong);border-radius:var(--radius-l);backgro
 dialog::backdrop{background:#10151a80;backdrop-filter:blur(6px)}
 dialog h2{font-size:34px;font-weight:500;letter-spacing:-.04em;margin:15px 0 20px}
 dialog p{font-size:14px;line-height:1.75;margin:12px 0}
+#help{width:min(580px,calc(100vw - 28px));max-height:calc(100svh - 32px);overflow:auto}
+#help h3{font-size:13px;font-family:var(--font-mono);font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin:26px 0 10px;color:var(--muted)}
+.help-steps{list-style:none;counter-reset:step;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.help-steps li{counter-increment:step;position:relative;padding-left:44px;font-size:14px;line-height:1.6;min-height:30px}
+.help-steps li::before{content:counter(step);position:absolute;left:0;top:-2px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font:600 12px var(--font-mono);color:var(--ink-contrast);background:var(--ink)}
+.help-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:8px;font-size:13.5px;line-height:1.6}
+.help-list li::marker{color:var(--selection-accent)}
+kbd{font:11px var(--font-mono);padding:2px 6px;border:1px solid var(--line-strong);border-bottom-width:2px;border-radius:5px;background:var(--surface-2)}
+.help-credit{margin-top:22px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--muted)}
+.maker{color:var(--text);font-weight:700;letter-spacing:.1em}
 .dialog-close{position:absolute;right:16px;top:12px;width:34px;height:34px;border-radius:50%;font-size:22px;line-height:1;transition:background .2s}
 .dialog-close:hover{background:var(--surface-hover)}
 
