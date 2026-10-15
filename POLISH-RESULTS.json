@@ -23,6 +23,10 @@
     {
       "name": "mobile dark layout fits and mode toggle remains usable",
       "result": "passed"
+    },
+    {
+      "name": "mobile song editor fits and provides every language",
+      "result": "passed"
     }
   ],
   "errors": []

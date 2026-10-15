@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { CASSETTE_THEMES } from './themes.js';
-import { holographicSheen } from './hologram.js';
     const textureCache = new Map();
     const referenceImages = new Map();
     export async function preloadReferenceArtwork() {
@@ -574,9 +573,9 @@ import { holographicSheen } from './hologram.js';
         polygonOffsetUnits: -1
       });
 
-      holographicSheen(shellMat,themeKey==='midnight'?.48:.85);
-      holographicSheen(rimMat,1.1);
-      holographicSheen(labelMat,.38);
+      shellMat.userData.finishRole='shell';
+      rimMat.userData.finishRole='rim';
+      labelMat.userData.finishRole='label';
       const mats = {
         whiteHubMat: new THREE.MeshStandardMaterial({
           color: '#ffffff',

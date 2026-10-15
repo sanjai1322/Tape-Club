@@ -1,0 +1,50 @@
+{
+  "reports": [
+    {
+      "name": "all five original artwork files remain byte-for-byte unchanged",
+      "result": "passed"
+    },
+    {
+      "name": "English default and ordered language tabs for every cassette",
+      "result": "passed"
+    },
+    {
+      "name": "shared finish responds to hover and pointer, preserving all texture maps",
+      "result": "passed"
+    },
+    {
+      "name": "YouTube metadata creates a persistent entry in the chosen language",
+      "result": "passed"
+    },
+    {
+      "name": "YouTube-only group inserts safely with deck audio disabled",
+      "result": "passed"
+    },
+    {
+      "name": "metadata failure has a usable manual fallback; text cannot inject markup",
+      "result": "passed"
+    },
+    {
+      "name": "licensed audio URLs play alongside links; navigation skips YouTube entries",
+      "result": "passed"
+    },
+    {
+      "name": "reorder preserves playing track identity; removal stops and clears safely",
+      "result": "passed"
+    },
+    {
+      "name": "edit moves a song to another cassette and language",
+      "result": "passed"
+    },
+    {
+      "name": "local audio persists in IndexedDB and restores after reload; English remains default",
+      "result": "passed"
+    },
+    {
+      "name": "empty language switch clears audio without breaking transport",
+      "result": "passed"
+    }
+  ],
+  "errors": [],
+  "metadata": "Success and failure tested with deterministic oEmbed responses; manual fallback requires no network."
+}

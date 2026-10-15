@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {TransportState} from './state.js';
+import {isPlayable} from './playlist-store.js';
 const gsap=window.gsap;
 export class Transport {
   constructor({scene,player,tapes,slots,audio,onChange,onError,resetView}) {
@@ -41,7 +42,7 @@ export class Transport {
     await this.tween(tape.position,{x:seat.x,z:seat.z,duration:.65,ease:'power2.inOut'});
     await this.tween(tape.position,{y:seat.y,duration:.55,ease:'power2.inOut'});
     this.loaded=id;this.player.attach(tape);await this.setLid(false);this.audio.playMechanicalClick(135);
-    this.machine.set('ready');await this.audio.load(id);this.onChange();return true;
+    this.machine.set('ready');const queue=this.audio.store?.playableIndices(id)||this.audio.playlists[id].map((_,i)=>i);const chosen=queue.includes(this.audio.indices[id])?this.audio.indices[id]:queue[0];if(chosen===undefined)this.audio.clear(id);else await this.audio.load(id,chosen);this.onChange();return true;
   });}
   async eject(){if(this.busy||!this.loaded)return false;return this.run(async()=>{
     this.audio.pause();this.player.engage(false);this.machine.set('ejecting');await this.setInspection(false);await this.setLid(true);
@@ -53,23 +54,41 @@ export class Transport {
     this.loaded=null;await this.tween(tape.position,{...this.rest(id),duration:.5,ease:'power2.inOut'});
     await this.setLid(false);this.machine.set('empty');return true;
   });}
-  async play(){if(this.busy||!this.loaded)return false;return this.run(async()=>{
+  async play(){if(this.busy||!this.loaded||!isPlayable(this.audio.track))return false;return this.run(async()=>{
     // Unlock audio during the user gesture, before waiting for mechanical motion.
     await this.audio.ensureContext();await this.setInspection(false);await this.setLid(false);this.machine.set('starting');
     try{await this.audio.play();this.audioReady=true;this.machine.set('playing');this.player.engage(true);return true;}
     catch(e){this.machine.set('paused');throw Error(e.name==='NotAllowedError'?'Press Play again to allow audio in this browser.':'This audio could not play. Select another track or add a supported audio file.');}
   });}
   pause(){if(this.busy||!this.loaded)return false;this.audio.pause();this.machine.set('paused');this.player.engage(false);return true;}
-  async wind(direction){if(this.busy||!this.loaded)return false;if(this.state===direction)return this.pause();return this.run(async()=>{this.audio.pause();await this.setLid(false);this.machine.set(direction);this.player.engage(false);return true;});}
+  async wind(direction){if(this.busy||!this.loaded||!isPlayable(this.audio.track))return false;if(this.state===direction)return this.pause();return this.run(async()=>{this.audio.pause();await this.setLid(false);this.machine.set(direction);this.player.engage(false);return true;});}
   seek(p){if(this.busy||!this.loaded)return;this.audio.seekNormalized(p);this.tape.userData.setTapeProgress(p);}
   volume(v){this.audio.setVolume(v);this.player.volumeKnobGroup.rotation.z=THREE.MathUtils.degToRad(135-v*270);this.onChange();}
-  async track(delta,fromEnd=false){if(this.busy||!this.loaded)return false;const i=(this.audio.index+delta+this.audio.list.length)%this.audio.list.length;return this.chooseTrack(this.loaded,i,fromEnd||this.state==='playing');}
+  async track(delta,fromEnd=false){if(this.busy||!this.loaded)return false;const queue=this.audio.store?.playableIndices(this.loaded)||this.audio.list.flatMap((t,i)=>isPlayable(t)?[i]:[]);if(!queue.length)return false;const position=queue.indexOf(this.audio.index);const i=queue[(Math.max(0,position)+delta+queue.length)%queue.length];return this.chooseTrack(this.loaded,i,fromEnd||this.state==='playing');}
   async chooseTrack(theme,index,autoplay=false){
-    if(this.busy)return false;this.audio.ensureContext().catch(()=>{});
+    if(this.busy||!isPlayable(this.audio.playlists[theme]?.[index]))return false;this.audio.ensureContext().catch(()=>{});
     if(!this.loaded){this.audio.indices[theme]=index;this.onChange();return true;}
     if(theme!==this.loaded){this.audio.indices[theme]=index;this.onChange();return true;}
     return this.run(async()=>{const resume=autoplay||this.state==='playing';this.audio.pause();this.player.engage(false);this.machine.set('track');await this.audio.load(theme,index);this.machine.set('ready');if(resume){this.machine.set('starting');await this.audio.play();this.audioReady=true;this.machine.set('playing');this.player.engage(true);}return true;});
   }
+  async setLanguage(id,language){
+    if(this.busy)return false;return this.run(async()=>{
+      this.audio.store.setLanguage(id,language);const queue=this.audio.store.playableIndices(id);const index=queue[0];
+      if(this.loaded===id){this.audio.pause();this.player.engage(false);this.machine.set('track');if(index===undefined)this.audio.clear(id);else await this.audio.load(id,index);this.machine.set('ready');}
+      else this.audio.indices[id]=index??-1;
+    });
+  }
+  // All edits keep transport identity by track ID, never by a stale array index.
+  async mutatePlaylist(operation){if(this.busy)return false;return this.run(async()=>{
+    const audio=this.audio,old=audio.track?{...audio.track}:null;
+    const chosen=Object.fromEntries(Object.entries(audio.playlists).map(([id,list])=>[id,list[audio.indices[id]||0]?.id]));
+    const result=await operation();
+    for(const id of Object.keys(audio.playlists)){const found=audio.playlists[id].findIndex(t=>t.id===chosen[id]);audio.indices[id]=found>=0?found:(audio.store.playableIndices(id)[0]??-1);}
+    if(this.loaded&&(!old||!audio.track||audio.track.id!==old.id||audio.track.src!==old.src||audio.track.generated!==old.generated||audio.track.language!==audio.store.language(this.loaded)||!isPlayable(audio.track))){
+      audio.pause();this.player.engage(false);this.machine.set('track');const index=audio.store.playableIndices(this.loaded)[0];if(index===undefined)audio.clear(this.loaded);else await audio.load(this.loaded,index);this.machine.set('ready');
+    }
+    this.onChange();return result;
+  });}
   update(dt,time){
     let speed=0;const media=this.audio.audioEl;
     if(this.loaded){
