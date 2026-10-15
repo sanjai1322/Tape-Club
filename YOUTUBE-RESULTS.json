@@ -1,0 +1,46 @@
+{
+  "reports": [
+    {
+      "name": "YouTube track plays in this page, inserts cassette and leaves artwork intact",
+      "result": "passed"
+    },
+    {
+      "name": "pause, resume, seek, skip and volume control the embedded source",
+      "result": "passed"
+    },
+    {
+      "name": "actual video state governs reels; no fabricated frequency analysis",
+      "result": "passed"
+    },
+    {
+      "name": "mixed queue switches between real local audio and YouTube with no overlap",
+      "result": "passed"
+    },
+    {
+      "name": "editing a YouTube URL reloads source while reorder retains identity",
+      "result": "passed"
+    },
+    {
+      "name": "embedding restriction is visible and recovers by choosing another track",
+      "result": "passed"
+    },
+    {
+      "name": "autoplay block leaves manual embedded controls usable",
+      "result": "passed"
+    },
+    {
+      "name": "mobile player meets minimum viewport size with no horizontal overflow",
+      "result": "passed"
+    },
+    {
+      "name": "video controls cannot bypass the open-lid safety state",
+      "result": "passed"
+    },
+    {
+      "name": "eject destroys embedded playback and hides its panel",
+      "result": "passed"
+    }
+  ],
+  "errors": [],
+  "note": "Transport tests use a deterministic IFrame API fixture. Live network check is recorded separately."
+}

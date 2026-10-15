@@ -2,13 +2,21 @@ import * as THREE from 'three';
 import { CASSETTE_THEMES } from './themes.js';
 import { PLAYLISTS } from './playlists.js';
 import {isPlayable} from './playlist-store.js';
-export class AudioEngine {
+import {YouTubePlayer} from './youtube-player.js';
+export class AudioEngine extends EventTarget {
   constructor(store) {
+    super();
     this.ctx=null; this.analyser=null; this.gainNode=null; this.sourceNode=null;
     this.audioEl=new Audio(); this.audioEl.preload='auto'; this.audioEl.crossOrigin='anonymous';
     this.freqData=new Uint8Array(32); this.volume=.7; this.trackUrls=new Map();
     this.store=store;this.playlists=store?.playlists||structuredClone(PLAYLISTS); this.indices={}; this.theme=null; this.generation=0; this.urls=new Set();
+    this.youtube=new YouTubePlayer();this.sourceType='audio';
+    for(const type of ['waiting','playing','pause','error','ended']){
+      this.audioEl.addEventListener(type,()=>{if(this.sourceType!=='youtube')this.dispatchEvent(new Event(type));});
+      this.youtube.addEventListener(type,()=>{if(this.sourceType==='youtube')this.dispatchEvent(new Event(type));});
+    }
   }
+  get media(){return this.sourceType==='youtube'?this.youtube:this.audioEl;}
   async ensureContext() {
     if(!this.ctx) {
       this.ctx=new (window.AudioContext||window.webkitAudioContext)();
@@ -24,7 +32,10 @@ export class AudioEngine {
   get track() { return this.list[this.index]; }
   async load(theme,index=this.indices[theme]||0) {
     this.pause(); this.theme=theme; this.indices[theme]=index; const token=++this.generation;
-    const track=this.track; if(!isPlayable(track)) throw Error('Choose a playable audio track. YouTube entries open on YouTube.');
+    const track=this.track; if(!isPlayable(track)) throw Error('Choose a playable track.');
+    this.sourceType=track.sourceType;this.freqData.fill(0);
+    if(track.sourceType==='youtube'){this.audioEl.removeAttribute('src');this.audioEl.load();return await this.youtube.load(track);}
+    this.youtube.clear();
     const url=track.generated?this.getOrGenerateThemeWavUrl(track.generated):track.src;
     this.audioEl.src=url; this.audioEl.load();
     await new Promise((resolve,reject)=>{
@@ -35,14 +46,14 @@ export class AudioEngine {
     });
     return token===this.generation;
   }
-  async play() { await this.ensureContext(); await this.audioEl.play(); }
-  clear(theme){this.pause();this.theme=theme;this.indices[theme]=-1;this.audioEl.removeAttribute('src');this.audioEl.load();}
-  pause() { this.audioEl.pause(); }
-  seekNormalized(p) { if(Number.isFinite(this.audioEl.duration)) this.audioEl.currentTime=THREE.MathUtils.clamp(p,0,1)*this.audioEl.duration; }
-  getNormalizedProgress() { return Number.isFinite(this.audioEl.duration)&&this.audioEl.duration>0?this.audioEl.currentTime/this.audioEl.duration:0; }
-  setVolume(v) { this.volume=THREE.MathUtils.clamp(v,0,1); if(this.ctx)this.gainNode.gain.setTargetAtTime(this.volume,this.ctx.currentTime,.02); }
+  async play() { if(this.sourceType==='youtube')return this.youtube.play(this.track);await this.ensureContext(); await this.audioEl.play(); }
+  clear(theme){this.pause();this.youtube.clear();this.sourceType='audio';this.theme=theme;this.indices[theme]=-1;this.audioEl.removeAttribute('src');this.audioEl.load();}
+  pause() { this.audioEl.pause();this.youtube.pause(); }
+  seekNormalized(p) { const media=this.media;if(Number.isFinite(media.duration))media.currentTime=THREE.MathUtils.clamp(p,0,1)*media.duration; }
+  getNormalizedProgress() { const media=this.media;return Number.isFinite(media.duration)&&media.duration>0?media.currentTime/media.duration:0; }
+  setVolume(v) { this.volume=THREE.MathUtils.clamp(v,0,1);this.youtube.setVolume(this.volume); if(this.ctx)this.gainNode.gain.setTargetAtTime(this.volume,this.ctx.currentTime,.02); }
   getLevelSegments(count=10,playing=false) {
-    if(!playing||!this.analyser)return Array(count).fill(0);
+    if(!playing||!this.analyser||this.sourceType==='youtube'){this.freqData.fill(0);return Array(count).fill(0);}
     this.analyser.getByteFrequencyData(this.freqData);
     return Array.from({length:count},(_,i)=>this.freqData[i+1]/255);
   }
@@ -63,7 +74,7 @@ export class AudioEngine {
     }
     return {added:added.length,start,errors};
   }
-  dispose() {this.pause();this.audioEl.removeAttribute('src');this.audioEl.load();[...this.urls,...this.trackUrls.values()].forEach(u=>URL.revokeObjectURL(u));this.ctx?.close();}
+  dispose() {this.pause();this.youtube.dispose();this.audioEl.removeAttribute('src');this.audioEl.load();[...this.urls,...this.trackUrls.values()].forEach(u=>URL.revokeObjectURL(u));this.ctx?.close();}
       getOrGenerateThemeWavUrl(themeKey = 'cosmic') {
         if (this.trackUrls.has(themeKey)) return this.trackUrls.get(themeKey);
 

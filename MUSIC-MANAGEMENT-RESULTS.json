@@ -17,7 +17,7 @@
       "result": "passed"
     },
     {
-      "name": "YouTube-only group inserts safely with deck audio disabled",
+      "name": "YouTube-only group inserts safely with embedded playback available",
       "result": "passed"
     },
     {
@@ -25,7 +25,7 @@
       "result": "passed"
     },
     {
-      "name": "licensed audio URLs play alongside links; navigation skips YouTube entries",
+      "name": "licensed audio URLs play alongside embedded YouTube tracks",
       "result": "passed"
     },
     {

@@ -7,11 +7,11 @@ export class Transport {
     Object.assign(this,{scene,player,tapes,slots,audio,onChange,onError,resetView});
     this.machine=new TransportState(state=>{const tape=this.tape;if(tape){tape.userData.setPlaying(state==='playing');if(!['playing','rewind','forward'].includes(state)){tape.userData.state.leftRPM=0;tape.userData.state.rightRPM=0;}}onChange?.();});this.loaded=null;this.selected='cosmic';this.lidOpen=false;this.inspecting=false;this.hovered=null;
     this.reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;this.audioReady=false;
-    audio.audioEl.addEventListener('waiting',()=>this.audioReady=false);
-    audio.audioEl.addEventListener('playing',()=>this.audioReady=true);
-    audio.audioEl.addEventListener('pause',()=>{this.audioReady=false;if(!this.busy&&this.state==='playing'){this.machine.set('paused');player.engage(false);}});
-    audio.audioEl.addEventListener('error',()=>{this.audioReady=false;if(!this.busy&&this.loaded){this.audio.pause();this.machine.set('paused');this.onError('This track could not play. Choose another track or add a supported audio file.');}});
-    audio.audioEl.addEventListener('ended',()=>{this.audioReady=false;if(!this.busy)this.track(1,true);});
+    audio.addEventListener('waiting',()=>this.audioReady=false);
+    audio.addEventListener('playing',()=>{this.audioReady=true;if(audio.sourceType==='youtube'){if(!this.loaded||this.lidOpen||document.hidden||(this.busy&&this.state!=='starting')){audio.pause();return;}if(!this.busy){if(this.state!=='playing'){this.machine.set('starting');this.machine.set('playing');}player.engage(true);}}});
+    audio.addEventListener('pause',()=>{this.audioReady=false;if(!this.busy&&this.state==='playing'){this.machine.set('paused');player.engage(false);}});
+    audio.addEventListener('error',()=>{this.audioReady=false;if(!this.busy&&this.loaded){this.audio.pause();this.machine.set('paused');this.onError((audio.sourceType==='youtube'&&audio.youtube.error?.message)||'This track could not play. Choose another track or add a supported audio file.');}});
+    audio.addEventListener('ended',()=>{this.audioReady=false;if(!this.busy)this.track(1,true);});
   }
   get state(){return this.machine.value;} get busy(){return this.machine.busy;}
   get tape(){return this.loaded?this.tapes[this.loaded]:null;}
@@ -52,16 +52,16 @@ export class Transport {
     await this.tween(tape.rotation,{x:0,y:0,z:0,duration:.4,ease:'power2.inOut'});
     await this.tween(tape.position,{x:this.slots[id].position.x,z:this.slots[id].position.z,duration:.75,ease:'power2.inOut'});
     this.loaded=null;await this.tween(tape.position,{...this.rest(id),duration:.5,ease:'power2.inOut'});
-    await this.setLid(false);this.machine.set('empty');return true;
+    await this.setLid(false);this.audio.youtube.clear();this.machine.set('empty');return true;
   });}
   async play(){if(this.busy||!this.loaded||!isPlayable(this.audio.track))return false;return this.run(async()=>{
     // Unlock audio during the user gesture, before waiting for mechanical motion.
-    await this.audio.ensureContext();await this.setInspection(false);await this.setLid(false);this.machine.set('starting');
+    if(this.audio.sourceType!=='youtube')await this.audio.ensureContext();await this.setInspection(false);await this.setLid(false);this.machine.set('starting');
     try{await this.audio.play();this.audioReady=true;this.machine.set('playing');this.player.engage(true);return true;}
-    catch(e){this.machine.set('paused');throw Error(e.name==='NotAllowedError'?'Press Play again to allow audio in this browser.':'This audio could not play. Select another track or add a supported audio file.');}
+    catch(e){this.machine.set('paused');throw Error(this.audio.sourceType==='youtube'?e.message:e.name==='NotAllowedError'?'Press Play again to allow audio in this browser.':'This audio could not play. Select another track or add a supported audio file.');}
   });}
   pause(){if(this.busy||!this.loaded)return false;this.audio.pause();this.machine.set('paused');this.player.engage(false);return true;}
-  async wind(direction){if(this.busy||!this.loaded||!isPlayable(this.audio.track))return false;if(this.state===direction)return this.pause();return this.run(async()=>{this.audio.pause();await this.setLid(false);this.machine.set(direction);this.player.engage(false);return true;});}
+  async wind(direction){if(this.busy||!this.loaded||!isPlayable(this.audio.track))return false;if(this.audio.sourceType==='youtube'){const media=this.audio.media;media.currentTime=media.currentTime+(direction==='rewind'?-10:10);return true;}if(this.state===direction)return this.pause();return this.run(async()=>{this.audio.pause();await this.setLid(false);this.machine.set(direction);this.player.engage(false);return true;});}
   seek(p){if(this.busy||!this.loaded)return;this.audio.seekNormalized(p);this.tape.userData.setTapeProgress(p);}
   volume(v){this.audio.setVolume(v);this.player.volumeKnobGroup.rotation.z=THREE.MathUtils.degToRad(135-v*270);this.onChange();}
   async track(delta,fromEnd=false){if(this.busy||!this.loaded)return false;const queue=this.audio.store?.playableIndices(this.loaded)||this.audio.list.flatMap((t,i)=>isPlayable(t)?[i]:[]);if(!queue.length)return false;const position=queue.indexOf(this.audio.index);const i=queue[(Math.max(0,position)+delta+queue.length)%queue.length];return this.chooseTrack(this.loaded,i,fromEnd||this.state==='playing');}
@@ -84,15 +84,15 @@ export class Transport {
     const chosen=Object.fromEntries(Object.entries(audio.playlists).map(([id,list])=>[id,list[audio.indices[id]||0]?.id]));
     const result=await operation();
     for(const id of Object.keys(audio.playlists)){const found=audio.playlists[id].findIndex(t=>t.id===chosen[id]);audio.indices[id]=found>=0?found:(audio.store.playableIndices(id)[0]??-1);}
-    if(this.loaded&&(!old||!audio.track||audio.track.id!==old.id||audio.track.src!==old.src||audio.track.generated!==old.generated||audio.track.language!==audio.store.language(this.loaded)||!isPlayable(audio.track))){
+    if(this.loaded&&(!old||!audio.track||audio.track.id!==old.id||audio.track.src!==old.src||audio.track.generated!==old.generated||audio.track.videoId!==old.videoId||audio.track.sourceType!==old.sourceType||audio.track.language!==audio.store.language(this.loaded)||!isPlayable(audio.track))){
       audio.pause();this.player.engage(false);this.machine.set('track');const index=audio.store.playableIndices(this.loaded)[0];if(index===undefined)audio.clear(this.loaded);else await audio.load(this.loaded,index);this.machine.set('ready');
     }
     this.onChange();return result;
   });}
   update(dt,time){
-    let speed=0;const media=this.audio.audioEl;
+    let speed=0;const media=this.audio.media;
     if(this.loaded){
-      if(this.state==='playing'&&!media.paused&&!media.ended&&media.readyState>=3&&this.audioReady&&this.audio.ctx?.state==='running')speed=1;
+      if(this.state==='playing'&&!media.paused&&!media.ended&&media.readyState>=3&&this.audioReady&&(this.audio.sourceType==='youtube'||this.audio.ctx?.state==='running'))speed=1;
       if(this.state==='rewind'||this.state==='forward'){
         const dir=this.state==='rewind'?-1:1;speed=dir*6.5;
         if(Number.isFinite(media.duration)){media.currentTime=Math.max(0,Math.min(media.duration,media.currentTime+dir*dt*8));if(media.currentTime<=0||media.currentTime>=media.duration)this.pause();}

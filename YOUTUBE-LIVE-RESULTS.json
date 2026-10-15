@@ -1,0 +1,23 @@
+{
+  "state": "playing",
+  "actualPlayback": true,
+  "currentTime": 1.3538210190734863,
+  "playerMessage": "Playing here · YouTube",
+  "iframe": "https://www.youtube-nocookie.com/embed/M7lc1UVf-VE?playsinline=1&controls=1&rel=0&origin=http%3A%2F%2F127.0.0.1%3A4173&enablejsapi=1&widgetid=1&forigin=http%3A%2F%2F127.0.0.1%3A4173%2F&aoriginsup=1&vf=1",
+  "iframeText": "YouTube Developers Live: Embedded Web Player Customization\nGoogle for Developers\nGoogle for Developers\n2.68m subscribers\n0:01\nTime elapsed 1 second\n/22:23\nTime duration 22 minutes, 23 seconds\nIntro\nMore videos\n30:21\nGemini 4 Argon: What’s new and what’s next\n18 hours ago\n3:10\nIntroducing EmbeddingGemma 2: An open model for natively multimodal embeddings\n8 days ago\n2:05\nPer-Layer Embeddings (PLE) in Gemma 4 explained\n2 weeks ago\n7:17\nWhat's new in the Gemini Live API\n4 weeks ago",
+  "errors": [],
+  "requests": [
+    {
+      "url": "https://www.youtube-nocookie.com/api/stats/qoe?fmt=397&afmt=251&cpn=7lUGXuEA_lw4oZrf&el=embedded&ns=yt&fexp=v1%2C100673025%2C-76668381%2C27058999%2C34",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://www.youtube-nocookie.com/api/stats/playback?ns=yt&el=embedded&cpn=7lUGXuEA_lw4oZrf&ver=2&cmt=0.019&fmt=397&fs=0&rt=5.011&euri=http%3A%2F%2F127",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "url": "https://www.youtube-nocookie.com/ptracking?html5=1&video_id=M7lc1UVf-VE&cpn=7lUGXuEA_lw4oZrf&ei=mLbQarerJ4e_77APjZaKmA4&ptk=youtube_none&pltype=conten",
+      "failure": "net::ERR_ABORTED"
+    }
+  ]
+}

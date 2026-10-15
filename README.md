@@ -43,11 +43,11 @@ Prefer same-origin audio. Remote files need appropriate CORS headers for Web Aud
 
 ## Songs and language groups
 
-English is selected on each fresh page load. Tabs then follow Tamil, Hindi, Malayalam and Telugu. Each cassette has separate groups; switching languages changes the playback queue. Empty and YouTube-only groups keep deck audio controls disabled until an audio track is added.
+English is selected on each fresh page load. Tabs then follow Tamil, Hindi, Malayalam and Telugu. Each cassette has separate groups; switching languages changes the playback queue. Empty groups keep deck controls disabled until a track is added. YouTube entries participate in the same queue as audio files.
 
-**Add song** accepts a YouTube link or a direct licensed audio URL. Choose the destination cassette and language. **Get title & artist** attempts YouTube oEmbed metadata; network restrictions, private/deleted videos or unavailable metadata fall back to manual title/artist fields. Duration is optional and entered manually because oEmbed does not provide it. YouTube entries open the original video in a new tab. There is no hidden player, audio extraction or simulated YouTube reel synchronization. External YouTube playback requires internet access. Hosted audio requires an accessible file URL and appropriate CORS headers.
+**Add song** accepts a YouTube link or a direct licensed audio URL. Choose the destination cassette and language. **Get title & artist** attempts YouTube oEmbed metadata; network restrictions, private/deleted videos or unavailable metadata fall back to manual title/artist fields. Duration is optional and entered manually because oEmbed does not provide it. YouTube entries play inside TAPE//CLUB through the official visible YouTube IFrame Player API. Selecting a track inserts the selected tape and starts playback here. The deck controls play, pause, volume, seeking and track navigation; rewind/forward skip 10 seconds for videos. Reels follow actual player state and stop on buffering/pause. Internet access is required. Some owners restrict embedding, and private, removed, regional or age-restricted videos may be unavailable; the player displays an explanation. Browsers may require a tap inside the video to permit playback. No audio is extracted. YouTube audio cannot feed Web Audio analysis, so its frequency meter stays quiet. Hosted audio requires an accessible file URL and appropriate CORS headers.
 
-**Manage** reveals Move up, Move down, Edit and Remove controls. Edit can also move a song to a different cassette or language. Reordering retains the identity of an already playing track. Removing or moving the active track safely stops it and selects a remaining playable track. Next/previous and automatic advance stay within the current language and skip link-only entries.
+**Manage** reveals Move up, Move down, Edit and Remove controls. Edit can also move a song to a different cassette or language. Reordering retains the identity of an already playing track. Removing or moving the active track safely stops it and selects a remaining playable track. Next/previous and automatic advance stay within the current language and include YouTube videos.
 
 ## Central configuration
 
@@ -79,7 +79,7 @@ All five user-supplied reference images are in `dist/assets/`. Only their printe
 - `dist/js/cassette.js`, `themes.js`: retained cassette factories, artwork fallback, exact color configuration.
 - `player.js`, `rack.js`, `environment.js`: mechanisms, five storage slots, lighting and shadows.
 - `transport.js`, `state.js`: guarded operations, inspection, animation paths and transport state.
-- `audio.js`, `playlists.js`: actual media playback, local files, synth studies and audio analysis.
+- `audio.js`, `youtube-player.js`, `playlists.js`: shared playback interface, visible YouTube embeds, local files, synth studies and audio analysis.
 - `cassette-finish.js`, `config.js`: reusable interactive finish, per-theme palettes, language ordering and UI settings.
 - `playlist-store.js`, `playlist-ui.js`: validated source adapters, persistent language groups, song form and playlist management.
 - `resources.js`: batching and geometry reuse.
@@ -105,3 +105,5 @@ Three.js licensing is included in `dist/vendor/THREE-LICENSE.txt`. GSAP licensin
 `tests/polish.cjs` additionally checks collection thumbnails, remembered dark mode and scene color, duplicate-safe sampler additions, decoded playback and analyser output for all ten bundled MP3s, label depth separation, normal-motion inspection and mobile dark-mode layout. Results are recorded in `POLISH-RESULTS.json` and `AUDIO-RESULTS.json`.
 
 `tests/playlist-store.test.mjs` checks URL parsing, invalid sources, persistence, language isolation, reordering, moves, removal and storage failures. `tests/music-management.cjs` checks actual UI flows, metadata success/failure, safe rendering, active-track identity, all language groups, local-file restoration, and hover/selection finish response. See `MUSIC-MANAGEMENT-RESULTS.json`; metadata responses are mocked deterministically, while audio decoding and browser storage are exercised directly.
+
+`tests/youtube.cjs` tests the complete embedded playback lifecycle with a deterministic IFrame API fixture, including mobile sizing, buffering, owner restrictions, autoplay blocking, mixed audio/video queues and eject cleanup. `node tests/youtube-live.cjs` optionally checks the real YouTube service. The included `YOUTUBE-LIVE-RESULTS.json` records successful real embedded playback of the YouTube Developers demonstration; availability of other videos depends on their owners and YouTube. The adapter uses the [official YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference).

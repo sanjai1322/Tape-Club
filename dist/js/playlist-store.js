@@ -21,7 +21,7 @@ export function validateAudioURL(value,relative=false){
   if(/(^|\.)(youtube\.com|youtu\.be|youtube-nocookie\.com)$/.test(url.hostname))throw Error('Choose YouTube link as the source type for this address.');
   return url.href;
 }
-export function isPlayable(track){return !!track&&track.sourceType!=='youtube'&&!track.unavailable&&!!(track.generated||track.src);}
+export function isPlayable(track){return !!track&&!track.unavailable&&!!(track.sourceType==='youtube'?track.videoId:track.generated||track.src);}
 export async function addSongFromYouTube(url,{signal}={}){
   const data=parseYouTubeLink(url);const timeout=AbortSignal.timeout(UI_CONFIG.metadataTimeout);
   const response=await fetch(`https://www.youtube.com/oembed?url=${encodeURIComponent(data.url)}&format=json`,{signal:signal||timeout});

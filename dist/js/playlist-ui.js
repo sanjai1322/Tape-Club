@@ -11,7 +11,7 @@ export function createPlaylistUI({store,audio,transport,displayName,onError}){
   <form id="song-form"><div class="form-pair"><label>Cassette<select id="song-cassette"></select></label><label>Language<select id="song-language"></select></label></div>
   <label>Source<select id="song-source"><option value="youtube">YouTube link</option><option value="audio">Licensed audio URL</option></select></label>
   <div id="song-link-fields"><label id="song-url-label">Song link<input id="song-url" type="url" placeholder="https://www.youtube.com/watch?v=…" maxlength="2048"></label><button type="button" id="song-metadata" class="text-button">Get title &amp; artist ↗</button></div>
-  <p id="song-source-help" class="source-note">YouTube songs open on YouTube. Audio is never extracted.</p>
+  <p id="song-source-help" class="source-note">YouTube songs play here in an embedded video player.</p>
   <label>Song title<input id="song-title" required maxlength="180" placeholder="Song title"></label>
   <div class="form-pair"><label>Artist / channel<input id="song-artist" maxlength="120" placeholder="Artist or channel name"></label><label>Duration (optional)<input id="song-duration" placeholder="3:42" inputmode="numeric" maxlength="8"></label></div>
   <label id="song-credit-field" hidden>Credit / license (optional)<input id="song-credit" maxlength="500" placeholder="Artist · permission or license"></label>
@@ -19,7 +19,7 @@ export function createPlaylistUI({store,audio,transport,displayName,onError}){
   document.body.appendChild(dialog);
   Object.keys(store.playlists).forEach(id=>{const o=new Option(displayName(id),id);$('song-cassette').add(o);});
   languageTabsConfig.languages.forEach(l=>$('song-language').add(new Option(l.label,l.id)));
-  function sourceFields(){const type=$('song-source').value;const link=type==='youtube'||type==='audio';$('song-link-fields').hidden=!link;$('song-url').required=link;$('song-metadata').hidden=type!=='youtube';$('song-credit-field').hidden=type!=='audio';$('song-source-help').textContent=type==='youtube'?'Opens on YouTube in a new tab. No audio is extracted.':type==='audio'?'Use a direct, licensed audio-file URL. The host must allow browser audio access.':type==='local'?'This file stays in this browser. Re-add the file to replace its audio.':'Original TAPE//CLUB synth study.';}
+  function sourceFields(){const type=$('song-source').value;const link=type==='youtube'||type==='audio';$('song-link-fields').hidden=!link;$('song-url').required=link;$('song-metadata').hidden=type!=='youtube';$('song-credit-field').hidden=type!=='audio';$('song-source-help').textContent=type==='youtube'?'Plays here in the YouTube player. Some video owners restrict embedding.':type==='audio'?'Use a direct, licensed audio-file URL. The host must allow browser audio access.':type==='local'?'This file stays in this browser. Re-add the file to replace its audio.':'Original TAPE//CLUB synth study.';}
   function cancelMetadata(){metadataController?.abort();metadataController=null;$('song-metadata').disabled=false;}
   function open(track=null){
     cancelMetadata();editing=track?{cassette:transport.selected,id:track.id}:null;$('song-form').reset();$('song-message').textContent='';
@@ -60,12 +60,12 @@ export function createPlaylistUI({store,audio,transport,displayName,onError}){
     if(!group.length){const empty=document.createElement('li');empty.className='playlist-empty';empty.textContent=`No ${languageTabsConfig.languages.find(l=>l.id===store.language(id)).label} songs yet. Add a song, upload audio, or choose a sampler below.`;list.appendChild(empty);return;}
     group.forEach((track,i)=>{
       const li=document.createElement('li');li.className='track-row';li.dataset.trackId=track.id;
-      const external=track.sourceType==='youtube',button=document.createElement(external?'a':'button');button.className='track-play';
-      if(external){button.href=track.url;button.target='_blank';button.rel='noopener noreferrer';button.setAttribute('aria-label',`Open ${track.title} on YouTube in a new tab`);button.onclick=()=>transport.pause();}
-      else{button.type='button';button.disabled=busy||!isPlayable(track);button.classList.toggle('current',audio.playlists[id][audio.indices[id]||0]?.id===track.id);button.setAttribute('aria-pressed',String(button.classList.contains('current')));button.onclick=()=>transport.chooseTrack(id,audio.playlists[id].findIndex(t=>t.id===track.id));}
+      const external=track.sourceType==='youtube',button=document.createElement('button');button.className='track-play';
+      button.type='button';button.disabled=busy||!isPlayable(track);button.classList.toggle('current',audio.playlists[id][audio.indices[id]??0]?.id===track.id);button.setAttribute('aria-pressed',String(button.classList.contains('current')));button.setAttribute('aria-label',`Play ${track.title}`);
+      button.onclick=async()=>{if(transport.loaded&&transport.loaded!==id){onError('Eject the current cassette, then insert this tape to play it.');return;}await transport.chooseTrack(id,audio.playlists[id].findIndex(t=>t.id===track.id));if(!transport.loaded)await transport.insert();if(transport.loaded===id&&!transport.busy)await transport.play();};
       const number=document.createElement('span');number.className='track-number';number.textContent=String(i+1).padStart(2,'0');
       if(external&&UI_CONFIG.showThumbnails){const img=document.createElement('img');img.src=track.thumbnail;img.alt='';img.loading='lazy';img.referrerPolicy='no-referrer';img.onerror=()=>img.hidden=true;number.textContent='';number.appendChild(img);}
-      const text=document.createElement('span');text.className='track-copy';const name=document.createElement('span');name.className='track-name';name.textContent=track.title;const meta=document.createElement('small');meta.textContent=track.unavailable?'File missing · re-add audio':`${track.artist} · ${external?'YouTube ↗':track.local?'Local file':track.generated?'Synth study':'Audio'}`;text.append(name,meta);
+      const text=document.createElement('span');text.className='track-copy';const name=document.createElement('span');name.className='track-name';name.textContent=track.title;const meta=document.createElement('small');meta.textContent=track.unavailable?'File missing · re-add audio':`${track.artist} · ${external?'YouTube · plays here':track.local?'Local file':track.generated?'Synth study':'Audio'}`;text.append(name,meta);
       const duration=document.createElement('span');duration.className='track-time';duration.textContent=track.generated?'0:32':time(track.duration);button.append(number,text,duration);li.appendChild(button);
       const tools=document.createElement('div');tools.className='track-tools';tools.hidden=!managing;
       for(const [action,label,disabled,fn] of [
