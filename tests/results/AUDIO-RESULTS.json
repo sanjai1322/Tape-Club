@@ -2,42 +2,42 @@
   {
     "title": "Life of Riley",
     "duration": 235.294127,
-    "peak": 1
+    "peak": 0.9607843137254902
   },
   {
     "title": "Aerosol of my Love",
     "duration": 141.75,
-    "peak": 0.9568627450980393
+    "peak": 0.9137254901960784
   },
   {
     "title": "Surf Shimmy",
     "duration": 122.823537,
-    "peak": 0.9098039215686274
+    "peak": 0.9019607843137255
   },
   {
     "title": "Metalmania",
     "duration": 190.4,
-    "peak": 0.8588235294117647
+    "peak": 1
   },
   {
     "title": "Cipher",
     "duration": 231.2,
-    "peak": 0.8784313725490196
+    "peak": 0.9607843137254902
   },
   {
     "title": "Cut and Run",
     "duration": 214.766372,
-    "peak": 0.7725490196078432
+    "peak": 0.8392156862745098
   },
   {
     "title": "Local Forecast",
     "duration": 165.161293,
-    "peak": 0.9764705882352941
+    "peak": 0.984313725490196
   },
   {
     "title": "Mining by Moonlight",
     "duration": 203.592542,
-    "peak": 0.8980392156862745
+    "peak": 0.8941176470588236
   },
   {
     "title": "Funkorama",
@@ -47,6 +47,6 @@
   {
     "title": "Aces High",
     "duration": 192.941156,
-    "peak": 0.7215686274509804
+    "peak": 0.7294117647058823
   }
 ]

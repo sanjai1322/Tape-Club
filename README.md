@@ -51,6 +51,9 @@ Drag an empty part of the room to orbit; scroll/pinch to zoom. The deck’s real
 - **Link previews:** Open Graph and Twitter tags with `og-image.jpg` (1200×630). Set your real address in `index.html` (see HOSTING.md).
 - **Faster first load:** minified Three.js, preloaded fonts and modules, and a real progress bar.
 - **First visit:** the How to listen guide opens once and the Insert button pulses until the first insert.
+- **Loading splash:** a full-screen branded splash with a spinning cassette and real progress covers the page until the 3D room, artwork and fonts are ready, so nothing half-loaded is ever visible.
+- **Mobile:** a floating mini player stays within thumb reach (seek, previous, play/pause, next, eject); the 3D camera is framed for portrait screens and rendered sharper and more saturated; the header uses an icon-only mode switch and a short **Guide** button; tapping a tape scrolls to its details, and Insert scrolls up so you can watch the deck; light haptic taps on supported phones.
+- **Everywhere:** press feedback on every button, smoother toasts and cards, and a **Share** button in the player bar as well as on the tracklist.
 
 ## Your music
 

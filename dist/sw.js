@@ -1,6 +1,6 @@
 // Offline support: the 3D room, fonts, art and synth studies work without a connection.
 // Bundled MP3s stream from the network. Bump VERSION when you change the file list.
-const VERSION='tape-club-v1';
+const VERSION='tape-club-v2';
 const SHELL=[
   './',
   './assets/aqua.png',

@@ -5,7 +5,10 @@ import { CASSETTE_THEMES } from './themes.js';
     export async function preloadReferenceArtwork() {
       await Promise.all(Object.keys(CASSETTE_THEMES).map(async id=>{
         const image=new Image();image.src=new URL(`../assets/${id}.png`,import.meta.url).href;
-        try{await image.decode();referenceImages.set(id,image);}catch{console.warn(`Using procedural artwork for ${id}`);}
+        // decode() can stall in background tabs; onload always fires, and decode is only a head start.
+        try{await new Promise((resolve,reject)=>{if(image.complete&&image.naturalWidth)resolve();else{image.onload=resolve;image.onerror=reject;}});
+          await Promise.race([image.decode().catch(()=>{}),new Promise(r=>setTimeout(r,1200))]);referenceImages.set(id,image);}
+        catch{console.warn(`Using procedural artwork for ${id}`);}
       }));
     }
 

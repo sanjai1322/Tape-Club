@@ -23,9 +23,12 @@ const playlistStore=new PlaylistStore();await playlistStore.restoreFiles();
 const audio=new AudioEngine(playlistStore);const finishPointer=new THREE.Vector2();
 const finishState={pointer:finishPointer,selected:false,hovered:false,inserted:false,playing:false,inspecting:false,reducedMotion:false,activity:0};
 const container=$('canvas-container'),stage=$('stage');
+const coarsePointer=matchMedia('(pointer: coarse)').matches,reducedMotionPref=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+const buzz=(ms=8)=>{if(coarsePointer)try{navigator.vibrate?.(ms)}catch{}};
+if(coarsePointer)$('gesture-hint').textContent='DRAG TO ORBIT · PINCH TO ZOOM';
 let renderer;
 try{renderer=new THREE.WebGLRenderer({antialias:true,alpha:true,powerPreference:'high-performance'});}catch(e){$('loading').hidden=true;$('error-banner').hidden=false;$('error-banner').textContent='This browser cannot start the 3D room. Enable WebGL or open the site in a current Chrome, Edge, Safari, or Firefox browser.';throw e;}
-renderer.setPixelRatio(Math.min(devicePixelRatio,innerWidth<760?1.3:1.6));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.95;
+const smallScreen=innerWidth<760;renderer.setPixelRatio(Math.min(devicePixelRatio,smallScreen?2:1.6));renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=smallScreen?1.05:.95;
 renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.setClearColor('#f2f3f0',1);container.appendChild(renderer.domElement);
 const scene=new THREE.Scene();const camera=new THREE.PerspectiveCamera(34,1,.3,200);
 const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.dampingFactor=.08;controls.minDistance=16;controls.maxDistance=100;controls.maxPolarAngle=Math.PI*.47;controls.enablePan=false;
@@ -63,11 +66,14 @@ function cameraMove(pos,target,duration=.65){if(matchMedia('(prefers-reduced-mot
 function fitRoom(animate=true){
   // Offset the objects toward the lower half so the introductory type has air.
   const mobile=container.clientWidth<600;
-  const target=new THREE.Vector3(-3,3,-.5);const dist=mobile?87:50;
-  const pos=target.clone().add(new THREE.Vector3(-.36,.49,.8).normalize().multiplyScalar(dist));roomPose={pos,target};
+  // Portrait phones look from further left so the rack and deck overlap in depth and fill the width.
+  const aspect=container.clientWidth/Math.max(1,container.clientHeight);
+  const target=mobile?new THREE.Vector3(-2.4,5.5,-.5):new THREE.Vector3(-3,3,-.5);
+  const dist=mobile?THREE.MathUtils.clamp(52/aspect,55,95):50;
+  const pos=target.clone().add((mobile?new THREE.Vector3(-.48,.5,.72):new THREE.Vector3(-.36,.49,.8)).normalize().multiplyScalar(dist));roomPose={pos,target};
   if(animate)cameraMove(pos,target);else{camera.position.copy(pos);controls.target.copy(target);controls.update();}
 }
-function changeView(inspect){inspectionView=inspect;controls.enabled=!inspect;stage.classList.toggle('inspecting',inspect);$('gesture-hint').textContent=inspect?'DRAG TO TURN THE TAPE · ESC TO RETURN':'DRAG TO ORBIT · SCROLL TO ZOOM';if(inspect)cameraMove(new THREE.Vector3(-2,10,38),new THREE.Vector3(-2,8,15));else{deckView=false;fitRoom();}renderUI();}
+function changeView(inspect){inspectionView=inspect;controls.enabled=!inspect;stage.classList.toggle('inspecting',inspect);$('gesture-hint').textContent=inspect?'DRAG TO TURN THE TAPE · ESC TO RETURN':(coarsePointer?'DRAG TO ORBIT · PINCH TO ZOOM':'DRAG TO ORBIT · SCROLL TO ZOOM');if(inspect)cameraMove(new THREE.Vector3(-2,10,38),new THREE.Vector3(-2,8,15));else{deckView=false;fitRoom();}renderUI();}
 function showError(message){$('error-banner').textContent=message;$('error-banner').hidden=false;clearTimeout(showError.timer);showError.timer=setTimeout(()=>$('error-banner').hidden=true,10000);}
 const transport=new Transport({scene,player,tapes,slots,audio,onChange:()=>renderUI(),onError:showError,resetView:changeView});
 const playlistUI=createPlaylistUI({store:playlistStore,audio,transport,displayName,onError:showError});
@@ -87,7 +93,7 @@ function updateMediaSession(state){
 function updatePositionState(){const d=audio.media.duration,t=audio.media.currentTime;if(!session?.setPositionState||!transport.loaded||!(d>0)||!Number.isFinite(d))return;try{session.setPositionState({duration:d,position:Math.min(Math.max(0,t||0),d),playbackRate:1});}catch{}}
 let renderedPlaylist='',renderedSelection='';const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;function animateSelection(){if(reducedMotion)return;gsap.fromTo(['#selected-art','#selected-title','#selected-genre','#selected-description'],{y:9,opacity:0},{y:0,opacity:1,duration:.5,stagger:.055,ease:'power3.out',overwrite:true});}
 const statusNames={empty:'Choose your soundtrack',inserting:'Inserting cassette',ready:'Ready when you are',starting:'Starting audio',playing:'Now playing',paused:'Paused',rewind:'Rewinding',forward:'Fast forwarding',ejecting:'Returning to the shelf',lid:'Moving the lid',track:'Loading track'};
-keys.forEach((id,i)=>{const b=document.createElement('button');b.type='button';b.className='cassette-card';b.dataset.tape=id;b.style.setProperty('--accent',CASSETTE_THEMES[id].shellColor);b.innerHTML=`<span class="tape-swatch" aria-hidden="true"><img src="./assets/${id}.png" alt="" draggable="false"></span><span><span class="card-name">${displayName(id)}</span><span class="card-meta">${String(i+1).padStart(2,'0')} / ${descriptions[id][0].toUpperCase()}</span></span>`;b.onclick=()=>transport.select(id);$('cassette-list').appendChild(b);});
+keys.forEach((id,i)=>{const b=document.createElement('button');b.type='button';b.className='cassette-card';b.dataset.tape=id;b.style.setProperty('--accent',CASSETTE_THEMES[id].shellColor);b.innerHTML=`<span class="tape-swatch" aria-hidden="true"><img src="./assets/${id}.png" alt="" draggable="false"></span><span><span class="card-name">${displayName(id)}</span><span class="card-meta">${String(i+1).padStart(2,'0')} / ${descriptions[id][0].toUpperCase()}</span></span>`;b.onclick=async()=>{buzz();const changed=transport.selected!==id;await transport.select(id);if(changed&&smallScreen){const top=document.querySelector('.tape-panel').getBoundingClientRect().top+scrollY-8;scrollTo({top,behavior:reducedMotionPref()?'auto':'smooth'});}};$('cassette-list').appendChild(b);});
 document.querySelectorAll('.cassette-card').forEach(card=>{
   card.addEventListener('pointerenter',()=>transport.hover(card.dataset.tape));
   card.addEventListener('pointermove',e=>{const r=card.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*2-1,y=(e.clientY-r.top)/r.height*2-1;finishPointer.set(x,-y);card.style.setProperty('--tilt-x',`${-y*5}deg`);card.style.setProperty('--tilt-y',`${x*7}deg`);});
@@ -119,13 +125,14 @@ ALBUMS.forEach(album=>{
   });
   $('album-grid').appendChild(card);
 });
-$('insert-button').onclick=()=>transport.insert();$('eject').onclick=()=>transport.eject();$('play').onclick=()=>transport.state==='playing'?transport.pause():transport.play();$('rewind').onclick=()=>transport.wind('rewind');$('forward').onclick=()=>transport.wind('forward');$('previous').onclick=()=>transport.track(-1);$('next').onclick=()=>transport.track(1);$('lid').onclick=()=>transport.lid(!transport.lidOpen);$('inspect-button').onclick=()=>transport.inspect();
+$('insert-button').onclick=()=>{buzz(12);if(smallScreen)stage.scrollIntoView({behavior:reducedMotionPref()?'auto':'smooth',block:'start'});transport.insert();};$('eject').onclick=()=>{buzz(12);transport.eject();};$('play').onclick=()=>{buzz();transport.state==='playing'?transport.pause():transport.play();};$('rewind').onclick=()=>transport.wind('rewind');$('forward').onclick=()=>transport.wind('forward');$('previous').onclick=()=>transport.track(-1);$('next').onclick=()=>transport.track(1);$('lid').onclick=()=>transport.lid(!transport.lidOpen);$('inspect-button').onclick=()=>transport.inspect();
 $('seek').oninput=e=>transport.seek(Number(e.target.value)/1000);$('volume').oninput=e=>transport.volume(Number(e.target.value)/100);
 $('view-room').onclick=async()=>{if(transport.busy)return;if(transport.inspecting)await transport.inspect(false);deckView=false;fitRoom();$('view-room').classList.add('active');$('view-deck').classList.remove('active');};
 $('view-deck').onclick=async()=>{if(transport.busy)return;if(transport.inspecting)await transport.inspect(false);deckView=true;cameraMove(new THREE.Vector3(1,17,24),new THREE.Vector3(6,2,5));$('view-deck').classList.add('active');$('view-room').classList.remove('active');};
 function toast(message){const t=$('toast');t.textContent=message;t.hidden=false;clearTimeout(toast.timer);toast.timer=setTimeout(()=>t.hidden=true,4500);}
 const languageName=id=>languageTabsConfig.languages.find(l=>l.id===id)?.label||id;
-$('share-mix').onclick=async()=>{
+$('share-player').onclick=()=>$('share-mix').click();
+$('share-mix').onclick=async()=>{buzz();
   const tape=transport.selected,language=playlistStore.language(tape),{url,count,skipped}=createMixLink(playlistStore,tape,language);
   if(!count){toast('Nothing to share yet: uploaded files stay on your device. Add a YouTube song or a record-store sampler first.');return;}
   const note=skipped?` (${skipped} uploaded file${skipped>1?'s':''} left out)`:'';
