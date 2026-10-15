@@ -10,7 +10,7 @@ const {chromium}=require('playwright'),fs=require('node:fs');
   try{await page.waitForFunction(()=>tapeClub.audio.media.currentTime>1&&!tapeClub.audio.media.paused,null,{timeout:15000})}catch{}
   report=await page.evaluate(()=>({state:tapeClub.transport.state,actualPlayback:!tapeClub.audio.media.paused&&tapeClub.audio.media.currentTime>1,currentTime:tapeClub.audio.media.currentTime,playerMessage:document.querySelector('#youtube-status').textContent,iframe:document.querySelector('#youtube-mount iframe')?.src,iframeText:null}));
   const frame=page.frames().find(f=>/youtube.*embed/.test(f.url()));if(frame)report.iframeText=(await frame.locator('body').innerText().catch(()=>'' )).slice(0,1000);
-  await page.locator('#youtube-panel').scrollIntoViewIfNeeded();await page.screenshot({path:'youtube-live-preview.png'});
+  await page.locator('#youtube-panel').scrollIntoViewIfNeeded();await page.screenshot({path:'tests/results/screenshots/youtube-live-preview.png'});
  }catch(e){report={failure:e.message}}
- finally{report={...report,errors,requests};fs.writeFileSync('YOUTUBE-LIVE-RESULTS.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close()}
+ finally{report={...report,errors,requests};fs.writeFileSync('tests/results/YOUTUBE-LIVE-RESULTS.json',JSON.stringify(report,null,2));console.log(JSON.stringify(report,null,2));await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

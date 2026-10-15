@@ -10,7 +10,7 @@ Install Node.js 20 or later, open a terminal in this folder, and run:
 npm start
 ```
 
-Open **http://127.0.0.1:4173**. No dependency installation or internet connection is needed to run the website: Three.js 0.162.0, OrbitControls, and GSAP 3.12.5 are included locally. Use an HTTP server rather than double-clicking the HTML file. Any static host can serve the contents of `dist/`.
+Open **http://127.0.0.1:4173**. No dependency installation or internet connection is needed to run the website: Three.js 0.162.0, OrbitControls, and GSAP 3.12.5 are included locally (the Space Grotesk / JetBrains Mono / Instrument Serif web fonts load from Google Fonts and fall back to system fonts offline). Use an HTTP server rather than double-clicking the HTML file. Any static host can serve the contents of `dist/`. See **[HOSTING.md](HOSTING.md)** for putting it online and counting viewers.
 
 ## Listen
 
@@ -83,7 +83,9 @@ All five user-supplied reference images are in `dist/assets/`. Only their printe
 - `cassette-finish.js`, `config.js`: reusable interactive finish, per-theme palettes, language ordering and UI settings.
 - `playlist-store.js`, `playlist-ui.js`: validated source adapters, persistent language groups, song form and playlist management.
 - `resources.js`: batching and geometry reuse.
-- `app.js`, `style.css`, `index.html`: responsive interface, raycasting, touch, keyboard and rendering.
+- `app.js`, `style.css`, `index.html`: responsive interface, raycasting, touch, keyboard and rendering. `style.css` is organized into numbered sections with light/dark design tokens at the top.
+- `analytics.js`: optional GoatCounter page views, listening events and a public visit count (configured in `config.js`).
+- `tests/results/`: last recorded test reports; screenshots land in `tests/results/screenshots/` (git-ignored).
 
 Only one mechanical/track operation runs at a time. Reels stop on pause, rejected playback, buffering, and hidden tabs. Playback pauses when this tab is hidden. Reduced-motion preferences shorten mechanical moves and remove decorative animation; angle-dependent sheen remains.
 
@@ -98,12 +100,12 @@ npm install
 npm test
 ```
 
-`BROWSER_CHANNEL=msedge` selects Edge, and `TEST_URL` can select another HTTP origin. See `TEST-RESULTS.json` for the last browser run , `CONTROLS-RESULTS.json` for 3D key/knob and actual touch checks, and `MECHANICS-RESULTS.json` for 7,070 sampled poses across the five insertion/ejection paths, checked against oriented lid and neighboring-cassette bounds. The suite covers five object-preserving cassette cycles, spindle alignment, selection/inspection, real audio analysis, pause/reel synchronization, seek, volume, winding, track navigation, local multi-file playback, invalid audio, ended tracks, rejected play, rapid actions, lid behavior, GPU geometry stability, and a 390px mobile layout. Browser automation verifies decoded playback and analyser output; listening quality and real-device GPU speed remain device dependent.
+`BROWSER_CHANNEL=msedge` selects Edge, and `TEST_URL` can select another HTTP origin. See `tests/results/TEST-RESULTS.json` for the last browser run , `tests/results/CONTROLS-RESULTS.json` for 3D key/knob and actual touch checks, and `tests/results/MECHANICS-RESULTS.json` for 7,070 sampled poses across the five insertion/ejection paths, checked against oriented lid and neighboring-cassette bounds. The suite covers five object-preserving cassette cycles, spindle alignment, selection/inspection, real audio analysis, pause/reel synchronization, seek, volume, winding, track navigation, local multi-file playback, invalid audio, ended tracks, rejected play, rapid actions, lid behavior, GPU geometry stability, and a 390px mobile layout. Browser automation verifies decoded playback and analyser output; listening quality and real-device GPU speed remain device dependent.
 
 Three.js licensing is included in `dist/vendor/THREE-LICENSE.txt`. GSAP licensing information is in `dist/vendor/GSAP-LICENSE.txt`. The reference images were supplied by the project owner.
 
-`tests/polish.cjs` additionally checks collection thumbnails, remembered dark mode and scene color, duplicate-safe sampler additions, decoded playback and analyser output for all ten bundled MP3s, label depth separation, normal-motion inspection and mobile dark-mode layout. Results are recorded in `POLISH-RESULTS.json` and `AUDIO-RESULTS.json`.
+`tests/polish.cjs` additionally checks collection thumbnails, remembered dark mode and scene color, duplicate-safe sampler additions, decoded playback and analyser output for all ten bundled MP3s, label depth separation, normal-motion inspection and mobile dark-mode layout. Results are recorded in `tests/results/POLISH-RESULTS.json` and `tests/results/AUDIO-RESULTS.json`.
 
-`tests/playlist-store.test.mjs` checks URL parsing, invalid sources, persistence, language isolation, reordering, moves, removal and storage failures. `tests/music-management.cjs` checks actual UI flows, metadata success/failure, safe rendering, active-track identity, all language groups, local-file restoration, and hover/selection finish response. See `MUSIC-MANAGEMENT-RESULTS.json`; metadata responses are mocked deterministically, while audio decoding and browser storage are exercised directly.
+`tests/playlist-store.test.mjs` checks URL parsing, invalid sources, persistence, language isolation, reordering, moves, removal and storage failures. `tests/music-management.cjs` checks actual UI flows, metadata success/failure, safe rendering, active-track identity, all language groups, local-file restoration, and hover/selection finish response. See `tests/results/MUSIC-MANAGEMENT-RESULTS.json`; metadata responses are mocked deterministically, while audio decoding and browser storage are exercised directly.
 
-`tests/youtube.cjs` tests the complete embedded playback lifecycle with a deterministic IFrame API fixture, including mobile sizing, buffering, owner restrictions, autoplay blocking, mixed audio/video queues and eject cleanup. `node tests/youtube-live.cjs` optionally checks the real YouTube service. The included `YOUTUBE-LIVE-RESULTS.json` records successful real embedded playback of the YouTube Developers demonstration; availability of other videos depends on their owners and YouTube. The adapter uses the [official YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference).
+`tests/youtube.cjs` tests the complete embedded playback lifecycle with a deterministic IFrame API fixture, including mobile sizing, buffering, owner restrictions, autoplay blocking, mixed audio/video queues and eject cleanup. `node tests/youtube-live.cjs` optionally checks the real YouTube service. The included `tests/results/YOUTUBE-LIVE-RESULTS.json` records successful real embedded playback of the YouTube Developers demonstration; availability of other videos depends on their owners and YouTube. The adapter uses the [official YouTube IFrame API](https://developers.google.com/youtube/iframe_api_reference).

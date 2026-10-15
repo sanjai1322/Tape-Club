@@ -17,3 +17,10 @@ export const CASSETTE_FINISH={
     golden:{colorStops:['#f4cc43','#ffad36','#ef6b30'],sheenIntensity:.62}
   }
 };
+
+// Viewer analytics (GoatCounter, free and cookie-free). Create a site at
+// https://www.goatcounter.com, then put its code here, e.g. 'tapeclub' for
+// https://tapeclub.goatcounter.com. Leave empty to disable tracking entirely.
+// showVisitCount needs "Allow adding visitor counts on your website" enabled
+// in GoatCounter's site settings.
+export const ANALYTICS_CONFIG={goatcounterCode:'',showVisitCount:true};

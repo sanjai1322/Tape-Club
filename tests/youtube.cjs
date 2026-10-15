@@ -46,10 +46,10 @@ const mock=require('./youtube-fixture.cjs');
   await page.evaluate(()=>{window.blockYT=false;testYT.event(1)});assert.equal(await page.evaluate(()=>tapeClub.transport.state),'playing');
  });
  await check('mobile player meets minimum viewport size with no horizontal overflow',async()=>{
-  await page.setViewportSize({width:390,height:844});await page.locator('#youtube-panel').scrollIntoViewIfNeeded();const box=await page.locator('#youtube-mount iframe').boundingBox();assert.ok(box.width>=200&&box.height>=200);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'youtube-mobile-preview.png'});
+  await page.setViewportSize({width:390,height:844});await page.locator('#youtube-panel').scrollIntoViewIfNeeded();const box=await page.locator('#youtube-mount iframe').boundingBox();assert.ok(box.width>=200&&box.height>=200);assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));await page.screenshot({path:'tests/results/screenshots/youtube-mobile-preview.png'});
  });
  await check('video controls cannot bypass the open-lid safety state',async()=>{await page.evaluate(()=>tapeClub.transport.lid(true));await idle();await page.evaluate(()=>testYT.event(1));assert.equal(await page.evaluate(()=>testYT.state),2);assert.equal(await page.evaluate(()=>tapeClub.transport.state),'paused');await page.evaluate(()=>tapeClub.transport.lid(false));await idle();await page.click('#play');await idle()});
  await check('eject destroys embedded playback and hides its panel',async()=>{await page.click('#eject');await idle();assert.equal(await page.locator('#youtube-panel').isVisible(),false);assert.equal(await page.evaluate(()=>tapeClub.audio.youtube.player),null);assert.equal(await page.evaluate(()=>tapeClub.transport.state),'empty')});
  assert.deepEqual(errors,[]);
- }finally{fs.writeFileSync('YOUTUBE-RESULTS.json',JSON.stringify({reports,errors,note:'Transport tests use a deterministic IFrame API fixture. Live network check is recorded separately.'},null,2));await browser.close()}
+ }finally{fs.writeFileSync('tests/results/YOUTUBE-RESULTS.json',JSON.stringify({reports,errors,note:'Transport tests use a deterministic IFrame API fixture. Live network check is recorded separately.'},null,2));await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

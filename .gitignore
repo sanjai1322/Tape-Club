@@ -1,13 +1,5 @@
 node_modules/
-desktop-preview.png
-mobile-preview.png
-inspection-preview.png
-dark-preview.png
-mobile-dark-preview.png
+.claude/
+tests/results/screenshots/
 *.tar.gz
 *.zip
-song-editor-preview.png
-mobile-editor-preview.png
-
-youtube-mobile-preview.png
-youtube-live-preview.png

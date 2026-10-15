@@ -25,6 +25,6 @@ const fs=require('node:fs');
    for(const id of Object.keys(tapes)){t.selected=id;await t.insert();await t.eject();}
    return {samples,collisions:collisions.slice(0,20),collisionCount:collisions.length};
   });
-  fs.writeFileSync('MECHANICS-RESULTS.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));if(result.collisionCount)process.exitCode=1;
+  fs.writeFileSync('tests/results/MECHANICS-RESULTS.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result));if(result.collisionCount)process.exitCode=1;
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1});
